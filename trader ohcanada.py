@@ -124,7 +124,7 @@ class Trader:
 
         if (cpos < self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] > 20):
             num = min(40, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
-            orders.append(Order(product, min(undercut_buy - 1, acc_bid-1), num))
+            orders.append(Order(product, min(undercut_buy - 1, acc_bid - 2), num))
             cpos += num
 
         if cpos < self.POSITION_LIMIT['AMETHYSTS']:
