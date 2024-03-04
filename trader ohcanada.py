@@ -62,7 +62,7 @@ class Trader:
         # bananas cache stores price from 1 day ago, current day resp
         # by price, here we mean mid price
 
-        coef = [-0.022,  0.05 ,  0.1,  0.2]
+        coef = [-0.02,  0.05 ,  0.1,  0.2]
         intercept = 5
         nxt_price = intercept
         for i, val in enumerate(self.starfruit_cache):
@@ -218,12 +218,8 @@ class Trader:
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
 
 
- # RUN function  
+ # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
     def run(self, state: TradingState) -> Dict[str, List[Order]]:
-        """
-        Only method required. It takes all buy and sell orders for all symbols as an input,
-        and outputs a list of orders to be sent
-        """
         # Initialize the method output dict as an empty dict
         result = {'AMETHYSTS' : [], 'STARFRUIT' : []}
 
