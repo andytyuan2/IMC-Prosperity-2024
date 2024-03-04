@@ -313,7 +313,7 @@ class Trader:
         amethysts_lb = 10000
         amethysts_ub = 10000
 
-        # CHANGE FROM HERE blah blah blah
+        # CHANGE FROM HERE
 
         acc_bid = {'AMETHYSTS' : amethysts_lb, 'STARFRUIT' : starfruit_lb} # we want to buy at slightly below
         acc_ask = {'AMETHYSTS' : amethysts_ub, 'STARFRUIT' : starfruit_ub} # we want to sell at slightly above
