@@ -321,10 +321,10 @@ class Trader:
         conv_bid = conv_lb # to buy at slightly lower than the best bid
         conv_ask = conv_ub # to sell at slightly higher than the best ask
         
-        if ConversionObservation.bidPrice > 0:
-            conversions = 2
+        if ConversionObservation.bidPrice > 50:
+            conversions = 200
         else:
-            conversions = 0
+            conversions = 100
 
         return result, conversions, traderdata
                
