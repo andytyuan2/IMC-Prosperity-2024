@@ -220,14 +220,14 @@ class Trader:
  # compute if we want to make a conversion or not
     def conversion_opp(self, convob: ConversionObservation) -> float:
         if convob().bidPrice > 50:
-            conversions = 200
+            conversions = 10
         else:
             conversions = 0
         return 0
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
-    def run(self, state: TradingState, convob: ConversionObservation) -> Tuple[Dict[str, List[Order]], float(Observation)]:
+    def run(self, state: TradingState, convob: ConversionObservation) -> Tuple[Dict[str, List[Order]], dict[str, List[Observation]]]:
         # Initialize the method output dict as an empty dict
         result = {'AMETHYSTS' : [], 'STARFRUIT' : []}
 
