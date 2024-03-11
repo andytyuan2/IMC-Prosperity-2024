@@ -224,6 +224,7 @@ class Trader:
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
     def run(self, state: TradingState) -> Dict[str, List[Order]]:
+        convob: ConversionObservation = float
         # Initialize the method output dict as an empty dict
         result = {'AMETHYSTS' : [], 'STARFRUIT' : []}
 
@@ -321,7 +322,7 @@ class Trader:
         conv_bid = conv_lb # to buy at slightly lower than the best bid
         conv_ask = conv_ub # to sell at slightly higher than the best ask
         
-        if ConversionObservation.bidPrice > 50:
+        if convob.bidPrice > 50:
             conversions = 200
         else:
             conversions = 100
