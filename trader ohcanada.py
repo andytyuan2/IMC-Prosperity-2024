@@ -219,7 +219,12 @@ class Trader:
         
  # compute if we want to make a conversion or not
     def conversion_opp(self):
-        return 0
+        convob: ConversionObservation = float
+        if convob.bidPrice > 50:
+            conversions = 200
+        else:
+            conversions = 0
+        return conversions
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
@@ -322,7 +327,9 @@ class Trader:
         conv_bid = conv_lb # to buy at slightly lower than the best bid
         conv_ask = conv_ub # to sell at slightly higher than the best ask
         
-        if convob.bidPrice > 50:
+        convbidprice = convob.bidPrice
+        
+        if convbidprice > 50:
             conversions = 200
         else:
             conversions = 100
