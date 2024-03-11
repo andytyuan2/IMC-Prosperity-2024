@@ -223,11 +223,11 @@ class Trader:
             conversions = 200
         else:
             conversions = 0
-        return conversions
+        return 0
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
-    def run(self, state: TradingState, convob: ConversionObservation) -> Tuple[Dict[str, List[Order]], float]:
+    def run(self, state: TradingState, convob: ConversionObservation) -> Tuple[Dict[str, List[Order]], float(Observation)]:
         # Initialize the method output dict as an empty dict
         result = {'AMETHYSTS' : [], 'STARFRUIT' : []}
 
@@ -325,12 +325,12 @@ class Trader:
         conv_bid = conv_lb # to buy at slightly lower than the best bid
         conv_ask = conv_ub # to sell at slightly higher than the best ask
         
-        convbidprice = convob().bidPrice
+        convbidprice = convob.bidPrice
         
         if convbidprice > 50:
-            conversions = 200
+            conversions = 20
         else:
-            conversions = 100
+            conversions = 10
 
         return result, conversions, traderdata
                
