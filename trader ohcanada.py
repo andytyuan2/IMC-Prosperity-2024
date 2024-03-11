@@ -219,7 +219,7 @@ class Trader:
         
  # compute if we want to make a conversion or not
     def conversion_opp(self, convob: ConversionObservation) -> float:
-        if convob.bidPrice > 50:
+        if convob().bidPrice > 50:
             conversions = 200
         else:
             conversions = 0
@@ -325,7 +325,7 @@ class Trader:
         conv_bid = conv_lb # to buy at slightly lower than the best bid
         conv_ask = conv_ub # to sell at slightly higher than the best ask
         
-        convbidprice = convob.bidPrice
+        convbidprice = convob().bidPrice
         
         if convbidprice > 50:
             conversions = 200
