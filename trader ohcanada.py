@@ -227,7 +227,7 @@ class Trader:
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
-    def run(self, (state: TradingState, convob: ConversionObservation)) -> Tuple[Dict[str, List[Order]], List[Observation] ]:
+    def run(self, state: TradingState, convob: ConversionObservation) -> Tuple[Dict[str, List[Order]], List[Observation] ]:
         # Initialize the method output dict as an empty dict
         result = {'AMETHYSTS' : [], 'STARFRUIT' : []}
 
