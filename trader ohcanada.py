@@ -218,8 +218,8 @@ class Trader:
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
         
  # compute if we want to make a conversion or not
-    def conversion_opp(self, convob: ConversionObservation) -> float:
-        if convob().bidPrice > 50:
+    def conversion_opp(self, convob: ConversionObservation) -> List[Observation]:
+        if convob.bidPrice > 50:
             conversions = 10
         else:
             conversions = 0
@@ -227,7 +227,7 @@ class Trader:
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
-    def run(self, state: TradingState, convob: ConversionObservation) -> Tuple[Dict[str, List[Order]], dict[str, List[Observation]]]:
+    def run(self, (state: TradingState, convob: ConversionObservation)) -> Tuple[Dict[str, List[Order]], List[Observation] ]:
         # Initialize the method output dict as an empty dict
         result = {'AMETHYSTS' : [], 'STARFRUIT' : []}
 
