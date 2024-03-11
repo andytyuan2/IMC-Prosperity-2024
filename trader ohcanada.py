@@ -1,5 +1,5 @@
 from typing import Dict, List
-from datamodel import OrderDepth, TradingState, Order
+from datamodel import OrderDepth, TradingState, Order, ConversionObservation, Observation
 import collections
 from collections import defaultdict
 import random
@@ -62,8 +62,8 @@ class Trader:
         # bananas cache stores price from 1 day ago, current day resp
         # by price, here we mean mid price
 
-        coef = [-0.02,  0.05 ,  0.1,  0.2]
-        intercept = 5
+        coef = [-0.02,  5 ,  4,  6]
+        intercept = 5000
         nxt_price = intercept
         for i, val in enumerate(self.starfruit_cache):
             nxt_price += val * coef[i]
@@ -209,13 +209,17 @@ class Trader:
     
 
 
- # Computer orders as a whole   
+ # Compute orders as a whole   
     def compute_orders(self, product, order_depth, acc_bid, acc_ask):
 
         if product == "AMETHYSTS":
             return self.compute_orders_amethysts(product, order_depth, acc_bid, acc_ask)
         if product == "STARFRUIT":
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
+        
+ # compute if we want to make a conversion or not
+    def conversion_opp(self):
+        return 0
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
@@ -302,12 +306,26 @@ class Trader:
         # print(f'Will trade {result}')
         print("End transmission")
         
-        		    # string value holding trader state data required. 
+        		# string value holding trader state data required. 
 				# it will be delivered as tradingstate.traderdata on next execution.
-        traderdata = "sample" 
+        traderdata = "ohcanada" 
         
+
+
+
 				# sample conversion request. check more details below. 
-        conversions = 1
+        # for conversion opportunities in trades
+        conv_lb = 10
+        conv_ub = 10
+        
+        conv_bid = conv_lb # to buy at slightly lower than the best bid
+        conv_ask = conv_ub # to sell at slightly higher than the best ask
+        
+        if ConversionObservation.bidPrice > 0:
+            conversions = 2
+        else:
+            conversions = 0
+
         return result, conversions, traderdata
                
         
