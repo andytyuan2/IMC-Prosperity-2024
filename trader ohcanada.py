@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from datamodel import OrderDepth, TradingState, Order, ConversionObservation, Observation
 import collections
 from collections import defaultdict
@@ -218,8 +218,7 @@ class Trader:
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
         
  # compute if we want to make a conversion or not
-    def conversion_opp(self):
-        convob: ConversionObservation = float
+    def conversion_opp(self, convob: ConversionObservation) -> float:
         if convob.bidPrice > 50:
             conversions = 200
         else:
@@ -228,8 +227,7 @@ class Trader:
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
-    def run(self, state: TradingState) -> Dict[str, List[Order]]:
-        (convob: ConversionObservation) -> float(ConversionObservation)
+    def run(self, state: TradingState, convob: ConversionObservation) -> Tuple[Dict[str, List[Order]], float]:
         # Initialize the method output dict as an empty dict
         result = {'AMETHYSTS' : [], 'STARFRUIT' : []}
 
