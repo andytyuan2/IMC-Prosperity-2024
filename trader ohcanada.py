@@ -64,7 +64,7 @@ class Trader:
         # bananas cache stores price from 1 day ago, current day resp
         # by price, here we mean mid price
 
-        coef = [-0.02,  5 ,  4,  6]
+        coef = [-0.02,  0.0003 ,  0.00223,  0.02492]
         intercept = 5000
         nxt_price = intercept
         for i, val in enumerate(self.starfruit_cache):
@@ -221,7 +221,7 @@ class Trader:
         
  # compute if we want to make a conversion or not
     def conversion_opp(self, observations):
-        conversions: list[ConversionObservation] = []
+        conversions = []
         
         
         for product in observations.conversionObservations.keys():
@@ -235,11 +235,12 @@ class Trader:
                 sun = value[5]
                 humid = value[6]
                 
-                if (cbuy+cexport) > (csell + cimport):
-                    conversions.append(ConversionObservation(cbuy, csell, ctrans, cexport, cimport, sun, humid))
+                if (cbuy+cexport) < (csell + cimport):
+                    # conversions.append(ConversionObservation(cbuy, csell, ctrans, cexport, cimport, sun, humid))
+                    conversions.append(1)
                 else:
-                    None
-        return conversions
+                    conversions.append(0)
+        return sum(conversions)
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
