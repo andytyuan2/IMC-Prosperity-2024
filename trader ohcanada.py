@@ -334,6 +334,7 @@ class Trader:
 				# sample conversion request. check more details below. 
         
         conversions = self.conversion_opp(state.observations)
+        print(f"Total Conversions: {conversions}")
 
         return result, conversions, traderdata
                
