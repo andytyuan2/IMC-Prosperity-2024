@@ -220,12 +220,12 @@ class Trader:
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
         
  # compute if we want to make a conversion or not
-    def conversion_opp(self, convob: Observation) -> Dict[str, Dict[ConversionObservation]]:
+    def conversion_opp(self, observations):
         conversions: list[ConversionObservation] = []
         
         
-        for product in convob.conversionObservations.keys():
-            for value in convob.conversionObservations[product]:
+        for product in observations.conversionObservations.keys():
+            for value in observations.conversionObservations[product]:
                 print(len(value))
                 cbuy = value[0]
                 csell = value[1]
@@ -235,8 +235,8 @@ class Trader:
                 sun = value[5]
                 humid = value[6]
                 
-                if cbuy+cimport > 1:
-                    conversions.append(ConversionObservation(min(cbuy), max(csell), ctrans, cexport, cimport, sun, humid))
+                if (cbuy+cexport) > (csell + cimport):
+                    conversions.append(ConversionObservation(cbuy, csell, ctrans, cexport, cimport, sun, humid))
                 else:
                     None
         return conversions
