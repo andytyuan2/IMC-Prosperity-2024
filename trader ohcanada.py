@@ -325,12 +325,7 @@ class Trader:
         conv_bid = conv_lb # to buy at slightly lower than the best bid
         conv_ask = conv_ub # to sell at slightly higher than the best ask
         
-        convbidprice = self.conversion_opp()
-        
-        if convbidprice > 50:
-            conversions = 20
-        else:
-            conversions = 10
+        conversions = self.conversion_opp()
 
         return result, conversions, traderdata
                
