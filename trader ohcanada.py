@@ -223,15 +223,23 @@ class Trader:
     def conversion_opp(self, convob: Observation) -> Dict[str, Dict[ConversionObservation]]:
         conversions: list[ConversionObservation] = []
         
-        csell = 
         
         for product in convob.conversionObservations.keys():
             for value in convob.conversionObservations[product]:
-                if value[0] > 0:
-                    continue
+                print(len(value))
+                cbuy = value[0]
+                csell = value[1]
+                ctrans = value[2]
+                cexport = value[3]
+                cimport = value[4]
+                sun = value[5]
+                humid = value[6]
+                
+                if cbuy+cimport > 1:
+                    conversions.append(ConversionObservation(min(cbuy), max(csell), ctrans, cexport, cimport, sun, humid))
                 else:
-                    conversion_default = 20
-        return conversion_default
+                    None
+        return conversions
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
