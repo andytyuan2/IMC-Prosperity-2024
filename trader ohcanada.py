@@ -57,6 +57,8 @@ class Trader:
     std = 25
     basket_std = 117
     
+    conversion_default = 0
+    
 
     def calc_next_price_starfruit(self):
         # bananas cache stores price from 1 day ago, current day resp
@@ -218,11 +220,11 @@ class Trader:
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
         
  # compute if we want to make a conversion or not
-    def conversion_opp(self, convob: ConversionObservation) -> float:
-        if convob.bidPrice > 50:
-            conversions = 10
+    def conversion_opp(self):
+        if ConversionObservation.bidPrice > 50:
+            conversion_default = 10
         else:
-            conversions = 0
+            conversion_default = 20
         return conversions
 
 
