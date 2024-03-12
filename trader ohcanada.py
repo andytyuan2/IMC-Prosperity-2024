@@ -64,7 +64,7 @@ class Trader:
         # bananas cache stores price from 1 day ago, current day resp
         # by price, here we mean mid price
 
-        coef = [-0.02,  0.0003 ,  0.00223,  0.02492]
+        coef = [-0.01869561,  0.0455032 ,  0.16316049,  0.8090892]
         intercept = 5000
         nxt_price = intercept
         for i, val in enumerate(self.starfruit_cache):
