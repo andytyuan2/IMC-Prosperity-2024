@@ -59,7 +59,7 @@ class Trader:
     
     conversion_default = 0
     
-
+# calculates the next price of starfrruit
     def calc_next_price_starfruit(self):
         # bananas cache stores price from 1 day ago, current day resp
         # by price, here we mean mid price
@@ -120,17 +120,17 @@ class Trader:
         sell_pr = max(undercut_sell, acc_ask+1)
 
         if (cpos < self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] < 0):
-            num = min(40, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
+            num = min(20, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
             orders.append(Order(product, min(undercut_buy + 1, acc_bid-1), num))
             cpos += num
 
         if (cpos < self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] > 20):
-            num = min(40, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
+            num = min(20, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
             orders.append(Order(product, min(undercut_buy - 1, acc_bid - 2), num))
             cpos += num
 
         if cpos < self.POSITION_LIMIT['AMETHYSTS']:
-            num = min(40, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
+            num = min(20, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
             orders.append(Order(product, bid_pr, num))
             cpos += num
         
@@ -145,17 +145,17 @@ class Trader:
                 orders.append(Order(product, bid, order_for))
 
         if (cpos > -self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] > 0):
-            num = max(-40, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
+            num = max(-20, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
             orders.append(Order(product, max(undercut_sell-1, acc_ask+1), num))
             cpos += num
 
         if (cpos > -self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] < -20):
-            num = max(-40, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
+            num = max(-20, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
             orders.append(Order(product, max(undercut_sell+1, acc_ask+1), num))
             cpos += num
 
         if cpos > -self.POSITION_LIMIT['AMETHYSTS']:
-            num = max(-40, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
+            num = max(-20, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
             orders.append(Order(product, sell_pr, num))
             cpos += num
 
@@ -235,7 +235,7 @@ class Trader:
                 sun = value[5]
                 humid = value[6]
                 
-                if (cbuy+cexport) < (csell + cimport):
+                if (cbuy+cexport) == (csell + cimport):
                     # conversions.append(ConversionObservation(cbuy, csell, ctrans, cexport, cimport, sun, humid))
                     conversions.append(1)
                 else:
