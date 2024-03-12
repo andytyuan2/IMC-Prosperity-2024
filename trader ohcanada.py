@@ -221,11 +221,11 @@ class Trader:
         
  # compute if we want to make a conversion or not
     def conversion_opp(self):
-        if ConversionObservation.bidPrice > 50:
+        if float(ConversionObservation().bidPrice) > 50:
             conversion_default = 10
         else:
             conversion_default = 20
-        return conversions
+        return conversion_default
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
