@@ -220,11 +220,17 @@ class Trader:
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
         
  # compute if we want to make a conversion or not
-    def conversion_opp(self):
-        if float(ConversionObservation().bidPrice) > 50:
-            conversion_default = 10
-        else:
-            conversion_default = 20
+    def conversion_opp(self, convob: Observation) -> Dict[str, Dict[ConversionObservation]]:
+        conversions: list[ConversionObservation] = []
+        
+        csell = 
+        
+        for product in convob.conversionObservations.keys():
+            for value in convob.conversionObservations[product]:
+                if value[0] > 0:
+                    continue
+                else:
+                    conversion_default = 20
         return conversion_default
 
 
@@ -314,20 +320,11 @@ class Trader:
         
         		# string value holding trader state data required. 
 				# it will be delivered as tradingstate.traderdata on next execution.
-        traderdata = "ohcanada" 
-        
-
-
+        traderdata = "ohcanada"
 
 				# sample conversion request. check more details below. 
-        # for conversion opportunities in trades
-        conv_lb = 10
-        conv_ub = 10
         
-        conv_bid = conv_lb # to buy at slightly lower than the best bid
-        conv_ask = conv_ub # to sell at slightly higher than the best ask
-        
-        conversions = self.conversion_opp()
+        conversions = self.conversion_opp(state.observations)
 
         return result, conversions, traderdata
                
