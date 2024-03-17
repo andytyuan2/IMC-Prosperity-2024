@@ -223,7 +223,6 @@ class Trader:
     def conversion_opp(self, observations):
         conversions = []
         
-        
         for product in observations.conversionObservations.keys():
             for value in observations.conversionObservations[product]:
                 print(len(value))
