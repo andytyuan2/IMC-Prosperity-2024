@@ -64,8 +64,8 @@ class Trader:
         # bananas cache stores price from 1 day ago, current day resp
         # by price, here we mean mid price
 
-        coef = [-0.01869561,  0.00238 ,  -0.0238,  -0.08090892]
-        intercept = 4.481696494462085
+        coef = [0.0099198301051983, 0.00215885895058859,  0.0029706595587066,  0.0197156224692137]
+        intercept = 17.25290439598
         nxt_price = intercept
         for i, val in enumerate(self.starfruit_cache):
             nxt_price += val * coef[i]
@@ -161,7 +161,7 @@ class Trader:
 
         return orders
     
-# perform regression on amethysts
+# perform regression on starfruit
     def compute_orders_regression(self, product, order_depth, acc_bid, acc_ask, LIMIT):
         orders: list[Order] = []
 
