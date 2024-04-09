@@ -65,7 +65,7 @@ class Trader:
         # by price, here we mean mid price
 
         coef = [0.0099198301051983, 0.00215885895058859,  0.0029706595587066,  0.0197156224692137]
-        intercept = 17.25290439598
+        intercept = 5017.25290439598
         nxt_price = intercept
         for i, val in enumerate(self.starfruit_cache):
             nxt_price += val * coef[i]
@@ -334,6 +334,8 @@ class Trader:
         
         conversions = self.conversion_opp(state.observations)
         print(f"Total Conversions: {conversions}")
+        print(f"starfruit upper bound: {starfruit_ub}")
+        print(f"starfruit lower bound: {starfruit_lb}")
 
         return result, conversions, traderdata
                
