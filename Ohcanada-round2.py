@@ -193,8 +193,8 @@ class Trader:
             osell[p] = collections.OrderedDict(sorted(order_depth[p].sell_orders.items()))
             obuy[p] = collections.OrderedDict(sorted(order_depth[p].buy_orders.items(), reverse=True))
 
-            osunlight = collections.OrderedDict(convobv.conversionObservations[p].ConversionObservation.sunlight())
-            ohumidity = collections.OrderedDict(convobv.conversionObservations[p].ConversionObservation.humidity())
+            osunlight = collections.OrderedDict(convobv.conversionObservations[p].sunlight)
+            ohumidity = collections.OrderedDict(convobv.conversionObservations[p].humidity)
             
             best_sell[p] = next(iter(osell[p]))
             best_buy[p] = next(iter(obuy[p]))
