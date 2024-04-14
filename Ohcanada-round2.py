@@ -31,6 +31,7 @@ class Trader:
     sell_orchids = False
     sunlight_value = 0
     humidity_value = 0
+    steps = 0
     
     conversion_default = 0
     
@@ -193,8 +194,8 @@ class Trader:
             osell[p] = collections.OrderedDict(sorted(order_depth[p].sell_orders.items()))
             obuy[p] = collections.OrderedDict(sorted(order_depth[p].buy_orders.items(), reverse=True))
 
-            osunlight = collections.OrderedDict(convobv.conversionObservations[p].sunlight)
-            ohumidity = collections.OrderedDict(convobv.conversionObservations[p].humidity)
+            osunlight = convobv[p].sunlight
+            ohumidity = convobv[p].humidity
             
             best_sell[p] = next(iter(osell[p]))
             best_buy[p] = next(iter(obuy[p]))
@@ -210,7 +211,7 @@ class Trader:
                 vol_sell[p] += -vol 
                 
         # if sunlight > 7 hours:        
-        if ohumidity > 60 & ohumidity < 90:
+        if (ohumidity > float(60)) and (ohumidity < float(90)):
             # price of orchids rise
             self.buy_orchids = True
         else:
@@ -226,10 +227,10 @@ class Trader:
 
         if self.buy_orchids:
             vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
-            orders['ORCHIDS'].append(Order('ORCHIDS', best_sell['ORCHIDS'], vol))
+            orders['ORCHIDS'].append(Order('ORCHIDS', best_sell['ORCHIDS'] + 1, vol))
         if self.sell_orchids:
             vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
-            orders['ORCHIDS'].append(Order('ORCHIDS', best_buy['ORCHIDS'], vol))
+            orders['ORCHIDS'].append(Order('ORCHIDS', best_buy['ORCHIDS'] - 1, vol))
 
         return orders
         
@@ -248,23 +249,17 @@ class Trader:
  # compute if we want to make a conversion or not
     def conversion_opp(self, observations):
         conversions = []
+        prods = ['ORCHIDS']
         
-        for product in observations.conversionObservations.keys():
-            for value in observations.conversionObservations[product]:
-                print(len(value))
-                cbuy = value[0]
-                csell = value[1]
-                ctrans = value[2]
-                cexport = value[3]
-                cimport = value[4]
-                sun = value[5]
-                humid = value[6]
+        for product in prods:
+            value = self.position['ORCHIDS']
                 
-                if (cbuy+cexport) == (csell + cimport):
-                    # conversions.append(ConversionObservation(cbuy, csell, ctrans, cexport, cimport, sun, humid))
-                    conversions.append(1)
-                else:
-                    conversions.append(0)
+                
+            if value < self.POSITION_LIMIT['ORCHIDS']:
+                    # conversions.append(conversionobservation(cbuy, csell, ctrans, cexport, cimport, sun, humid))
+                conversions.append(value)
+            else:
+                conversions.append(0)
         return sum(conversions)
 
 
@@ -317,8 +312,11 @@ class Trader:
                 self.person_position[trade.seller][product] = -1.5
                 self.person_actvalof_position[trade.buyer][product] += trade.quantity
                 self.person_actvalof_position[trade.seller][product] += -trade.quantity
-                
-        orders = self.compute_orders_orchids(state.order_depths, state.observations)
+         
+
+        # orders for the different products
+          
+        orders = self.compute_orders_orchids(state.order_depths, state.observations.conversionObservations)
         result['ORCHIDS'] += orders['ORCHIDS']
 
         for product in ['AMETHYSTS', 'STARFRUIT']:
@@ -361,7 +359,7 @@ class Trader:
 
 				# sample conversion request. check more details below. 
         
-        conversions = self.conversion_opp(state.observations)
+        conversions = self.conversion_opp(state.observations.plainValueObservations)
         print(f"Total Conversions: {conversions}")
 
         return result, conversions, traderdata
