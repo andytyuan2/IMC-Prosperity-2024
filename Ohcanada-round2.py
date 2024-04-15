@@ -29,6 +29,7 @@ class Trader:
     starfruit_dim = 4
     buy_orchids = False
     sell_orchids = False
+    close_orchids = False
     sunlight_value = 0
     humidity_value = 0
     steps = 0
@@ -217,44 +218,68 @@ class Trader:
                 vol_buy[p] += vol 
             for price, vol in osell[p].items():
                 vol_sell[p] += -vol 
+                
         # average sunlight per hour is 2500 units
         # each day in orchid trading is equal to 12 hours on the island, assume orchid quality doesn't deteriorate overnight
         # data plot shows instantaneous rate of sunlight on any moment of the day
                
         
-        if osunlight > 2500:  
-            if (ohumidity > 60) and (ohumidity < 80):
-                # price of orchids rise
-                self.sell_orchids = True
-            else:
-                # price of orchids fall
-                self.buy_orchids = True
+        if self.last_sunlight != -1 and ((osunlight - self.last_sunlight)/self.last_sunlight > 0):  
+            self.buy_orchids = True
+            self.sell_orchids = False
+        elif self.last_sunlight != -1 and ((osunlight - self.last_sunlight)/self.last_sunlight < 0):
+            self.sell_orchids = True
+            self.buy_orchids = False
         else:
-            if (ohumidity > 60) and (ohumidity < 80):
-                # price of orchids rise
-                self.sell_orchids = True
-            else:
-                # price of orchids fall
-                self.buy_orchids = True
+            self.buy_orchids = True
+            
+        if self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity > 0.01) and ((ohumidity < 80) and (ohumidity > 60)):
+            self.buy_orchids = True
+            self.sell_orchids = False
+        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity < -0.01) and ((ohumidity < 80) and (ohumidity > 60)):
+            self.buy_orchids = False
+            self.buy_orchids = True
+        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity > 0.01) and (ohumidity < 60):
+            self.sell_orchids = False
+            self.buy_orchids = True
+        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity > 0.01) and (ohumidity > 80):
+            self.sell_orchids = True
+            self.buy_orchids = False
+        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity < 0.01) and (ohumidity < 60):
+            self.sell_orchids = True
+            self.buy_orchids = False
+        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity < -0.01) and (ohumidity > 80):
+            self.sell_orchids = False
+            self.buy_orchids = True
+        else:
+            self.buy_orchids = True
            
+       
+        
         # stopgap so we don't exceed position limit    
         if self.buy_orchids and self.position['ORCHIDS'] == self.POSITION_LIMIT['ORCHIDS']:
             self.buy_orchids = False
         if self.sell_orchids and self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
             self.sell_orchids = False
+        if self.close_orchids and self.position['ORCHIDS'] == 0:
+            self.close_orchids = False
+            
 
         if self.buy_orchids:
             vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
-            if best_sell['ORCHIDS'] > southask:
-                orders['ORCHIDS'].append(Order('ORCHIDS', best_sell['ORCHIDS'], vol))
-            else:
-                orders['ORCHIDS'].append(Order('ORCHIDS', int(round(southask)) , vol))
+            orders['ORCHIDS'].append(Order('ORCHIDS', int(southask), vol))     
         if self.sell_orchids:
             vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
-            if best_buy['ORCHIDS'] < southbid:
-                orders['ORCHIDS'].append(Order('ORCHIDS', best_buy['ORCHIDS'], vol))
+            orders['ORCHIDS'].append(Order('ORCHIDS', int(southbid), -vol))
+        if self.close_orchids:
+            vol = -self.position['ORCHIDS']
+            if vol < 0:
+                orders['ORCHIDS'].append(Order('ORCHIDS', best_sell['ORCHIDS'], -vol))
             else:
-                orders['ORCHIDS'].append(Order('ORCHIDS', int(round(southbid)), vol))
+                orders['ORCHIDS'].append(Order('ORCHIDS', best_buy['ORCHIDS'], vol))
+                
+        self.last_humidity = convobv['ORCHIDS'].humidity
+        self.last_sunlight = convobv['ORCHIDS'].sunlight
 
         return orders
         
@@ -271,18 +296,26 @@ class Trader:
     
         
  # compute if we want to make a conversion or not
-    def conversion_opp(self, convobv):
+    def conversion_opp(self, convobv, timestamp):
         conversions = []
         prods = ['ORCHIDS']
         
-        for product in prods:
-            value = self.position[product]
+        if self.position['ORCHIDS'] <= 100 and self.position['ORCHIDS'] > 0:
+            conversions.append(self.position['ORCHIDS']/2)
+        else:
+            conversions.append(0)
+        
+        # if timestamp == 999*100:
+        #     conversions.append(self.position['ORCHIDS'])
+        # else:
+        #     conversions.append(0)
+        # for product in prods:
+        #     value = self.position[product]
                   
-            if value < self.POSITION_LIMIT['ORCHIDS']:
-                    # conversions.append(conversionobservation(cbuy, csell, ctrans, cexport, cimport, sun, humid))
-                conversions.append(0)#self.POSITION_LIMIT['ORCHIDS'] - abs(self.position['ORCHIDS']))
-            else:
-                conversions.append(0)
+        #     if value < self.POSITION_LIMIT[product]:
+        #         conversions.append(abs(value)/2)
+        #     else:
+        #         conversions.append(0)
         return sum(conversions)
 
 
@@ -382,7 +415,7 @@ class Trader:
 
 				# sample conversion request. check more details below. 
         
-        conversions = self.conversion_opp(state.observations.conversionObservations)
+        conversions = self.conversion_opp(state.observations.conversionObservations, state.timestamp)
         print(f"Total Conversions: {conversions}")
 
         return result, conversions, traderdata
