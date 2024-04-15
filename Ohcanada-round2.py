@@ -226,12 +226,10 @@ class Trader:
         
         if self.last_sunlight != -1 and ((osunlight - self.last_sunlight)/self.last_sunlight > 0):  
             self.buy_orchids = True
-            self.sell_orchids = False
         elif self.last_sunlight != -1 and ((osunlight - self.last_sunlight)/self.last_sunlight < 0):
             self.sell_orchids = True
-            self.buy_orchids = False
         else:
-            self.buy_orchids = True
+            self.sell_orchids = True
             
         if self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity > 0.01) and ((ohumidity < 80) and (ohumidity > 60)):
             self.buy_orchids = True
@@ -252,7 +250,19 @@ class Trader:
             self.sell_orchids = False
             self.buy_orchids = True
         else:
-            self.buy_orchids = True
+            self.sell_orchids = True
+            
+        
+            
+        if southbid > best_sell['ORCHIDS']:
+            price_to_buy = southbid
+        else:
+            price_to_buy = best_sell['ORCHIDS']
+            
+        if southask < best_buy['ORCHIDS']:
+            price_to_sell = southask
+        else:
+            price_to_sell = best_buy['ORCHIDS']
            
        
         
@@ -263,14 +273,20 @@ class Trader:
             self.sell_orchids = False
         if self.close_orchids and self.position['ORCHIDS'] == 0:
             self.close_orchids = False
-            
+        
+        if timestamp > 9895*100 and self.position['ORCHIDS'] < 0:
+            self.buy_orchids = True
+            self.sell_orchids = False
 
         if self.buy_orchids:
-            vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
-            orders['ORCHIDS'].append(Order('ORCHIDS', int(southask), vol))     
+            if timestamp > 9895*100 and self.position['ORCHIDS'] < 0:
+                vol = self.position['ORCHIDS']
+            else:
+                vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
+            orders['ORCHIDS'].append(Order('ORCHIDS', price_to_buy, vol))     
         if self.sell_orchids:
             vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
-            orders['ORCHIDS'].append(Order('ORCHIDS', int(southbid), -vol))
+            orders['ORCHIDS'].append(Order('ORCHIDS', price_to_sell , -vol))
         if self.close_orchids:
             vol = -self.position['ORCHIDS']
             if vol < 0:
@@ -297,13 +313,15 @@ class Trader:
         
  # compute if we want to make a conversion or not
     def conversion_opp(self, convobv, timestamp):
-        conversions = []
+        conversions = [0]
         prods = ['ORCHIDS']
         
         if self.position['ORCHIDS'] <= 100 and self.position['ORCHIDS'] > 0:
-            conversions.append(self.position['ORCHIDS']/2)
-        else:
-            conversions.append(0)
+            conversions.append(0)#self.position['ORCHIDS'])
+        elif self.position['ORCHIDS'] >= -100 and self.position['ORCHIDS'] < 0:
+            conversions.append(0)#(self.position['ORCHIDS']+1))
+        elif timestamp == 998*100:
+            conversions.append(abs(self.position['ORCHIDS']))
         
         # if timestamp == 999*100:
         #     conversions.append(self.position['ORCHIDS'])
