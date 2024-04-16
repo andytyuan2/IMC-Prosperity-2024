@@ -1,11 +1,14 @@
 from typing import Dict, List, Tuple
-from datamodel import OrderDepth, TradingState, Order, ConversionObservation, Observation
 import collections
 from collections import defaultdict
 import random
 import math
 import copy
 import numpy as np
+import json
+from datamodel import Listing, Observation, Order, OrderDepth, ProsperityEncoder, Symbol, Trade, TradingState, OrderDepth, TradingState, Order, ConversionObservation, Observation
+from typing import Any
+import jsonpickle
 
 empty_dict = {'AMETHYSTS' : 0, 'STARFRUIT' : 0}
 
@@ -173,11 +176,17 @@ class Trader:
 
         cpos = self.position[product]
 
+# ============================ ***for placing buy order*** ============================
+
         for ask, vol in osell.items():
             if ((ask <= acc_bid) or ((self.position[product]<0) and (ask == acc_bid+1))) and cpos < LIMIT:
+                
                 order_for = min(-vol, LIMIT - cpos)
+                
                 cpos += order_for
+                
                 assert(order_for >= 0)
+                
                 orders.append(Order(product, ask, order_for))
 
         undercut_buy = best_buy_pr + 1
@@ -185,14 +194,25 @@ class Trader:
 
         bid_pr = min(undercut_buy, acc_bid) # we will shift this by 1 to beat this price
         sell_pr = max(undercut_sell, acc_ask)
+        
 
         if cpos < LIMIT:
-            num = LIMIT - cpos
+            if cpos > 0:
+                num = min(LIMIT - cpos, 20)
+            else:
+                num = max(LIMIT - cpos, 20)
+            
             orders.append(Order(product, bid_pr, num))
+            
             cpos += num
+            
+        #     num = LIMIT - cpos
+        #     orders.append(Order(product, bid_pr, num))
+        #     cpos += num
         
-        cpos = self.position[product]
+        # cpos = self.position[product]
         
+ # ============================ ***for placing sell order*** ============================
 
         for bid, vol in obuy.items():
             if ((bid >= acc_ask) or ((self.position[product]>0) and (bid+1 == acc_ask))) and cpos > -LIMIT:
@@ -203,7 +223,11 @@ class Trader:
                 orders.append(Order(product, bid, order_for))
 
         if cpos > -LIMIT:
-            num = -LIMIT-cpos
+            if cpos > 0:
+                num = max(-LIMIT - cpos, -20)
+            else:
+                num = min(-LIMIT - cpos, -20)
+            # num = -LIMIT-cpos
             orders.append(Order(product, sell_pr, num))
             cpos += num
 
