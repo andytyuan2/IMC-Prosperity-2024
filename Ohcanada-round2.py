@@ -272,14 +272,10 @@ class Trader:
         if self.sell_orchids and self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
             self.sell_orchids = False
         if self.close_orchids and self.position['ORCHIDS'] == 0:
-            self.close_orchids = False
-        
-        if timestamp > 9895*100 and self.position['ORCHIDS'] < 0:
-            self.buy_orchids = True
-            self.sell_orchids = False
+            self.close_orchids = False 
 
         if self.buy_orchids:
-            if timestamp > 9895*100 and self.position['ORCHIDS'] < 0:
+            if timestamp > 9989*100 and self.position['ORCHIDS'] < 0:
                 vol = self.position['ORCHIDS']
             else:
                 vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']

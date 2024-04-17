@@ -29,15 +29,22 @@ class Trader:
     starfruit_dim = 4
     buy_orchids = False
     sell_orchids = False
-    close_orchids = False
+    orchidpnl = 0
+    last_orchid = 0
     sunlight_value = 0
     humidity_value = 0
     steps = 0
     start_sunlight = 0
     last_sunlight = -1
     last_humidity = -1
-        
-    basket_std = 117
+    last_export = -1
+    last_import = -1
+    
+
+
+    std = 25    
+    basket_std = 50 # 191.1808805 standard deviation
+
     cont_buy_basket_unfill = 0
     cont_sell_basket_unfill = 0
 
@@ -222,51 +229,14 @@ class Trader:
                 vol_buy[p] += vol 
             for price, vol in osell[p].items():
                 vol_sell[p] += -vol 
-                
-        # average sunlight per hour is 2500 units
-        # each day in orchid trading is equal to 12 hours on the island, assume orchid quality doesn't deteriorate overnight
-        # data plot shows instantaneous rate of sunlight on any moment of the day
-               
-        
-        if self.last_sunlight != -1 and ((osunlight - self.last_sunlight)/self.last_sunlight > 0):  
+            
+            
+        if self.last_export != -1 and (oexport - self.last_export >= 1) and self.last_import != -1 and (oimport - self.last_import == -0.2):
             self.buy_orchids = True
-        elif self.last_sunlight != -1 and ((osunlight - self.last_sunlight)/self.last_sunlight < 0):
-            self.sell_orchids = True
-        else:
+        if self.last_export != -1 and (oexport - self.last_export <= -1) and self.last_import != -1 and (oimport - self.last_import == 0.2):
             self.sell_orchids = True
             
-        if self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity > 0.01) and ((ohumidity < 80) and (ohumidity > 60)):
-            self.buy_orchids = True
-            self.sell_orchids = False
-        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity < -0.01) and ((ohumidity < 80) and (ohumidity > 60)):
-            self.buy_orchids = False
-            self.buy_orchids = True
-        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity > 0.01) and (ohumidity < 60):
-            self.sell_orchids = False
-            self.buy_orchids = True
-        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity > 0.01) and (ohumidity > 80):
-            self.sell_orchids = True
-            self.buy_orchids = False
-        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity < 0.01) and (ohumidity < 60):
-            self.sell_orchids = True
-            self.buy_orchids = False
-        elif self.last_humidity != -1 and ((ohumidity - self.last_humidity)/self.last_humidity < -0.01) and (ohumidity > 80):
-            self.sell_orchids = False
-            self.buy_orchids = True
-        else:
-            self.sell_orchids = True
-            
-        
-            
-        if southbid > best_sell['ORCHIDS']:
-            price_to_buy = southbid
-        else:
-            price_to_buy = best_sell['ORCHIDS']
-            
-        if southask < best_buy['ORCHIDS']:
-            price_to_sell = southask
-        else:
-            price_to_sell = best_buy['ORCHIDS']
+        # export tariff only changes by increments of 1
            
        
         
@@ -275,31 +245,29 @@ class Trader:
             self.buy_orchids = False
         if self.sell_orchids and self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
             self.sell_orchids = False
-        if self.close_orchids and self.position['ORCHIDS'] == 0:
-            self.close_orchids = False
-        
-        if timestamp > 9895*100 and self.position['ORCHIDS'] < 0:
-            self.buy_orchids = True
-            self.sell_orchids = False
-
-        if self.buy_orchids:
-            if timestamp > 9895*100 and self.position['ORCHIDS'] < 0:
-                vol = self.position['ORCHIDS']
+            
+        if timestamp >= 995*100:
+            vol = self.position['ORCHIDS']
+            if self.position['ORCHIDS'] > 0:
+                # self.sell_orchids = True
+                orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_buy['ORCHIDS']), -vol))
+            elif self.position['ORCHIDS'] < 0:
+                # self.buy_orchids = True
+                orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_sell['ORCHIDS']), vol))
             else:
+                orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_sell['ORCHIDS']), 0))
+        else:
+            if self.buy_orchids:
                 vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
-            orders['ORCHIDS'].append(Order('ORCHIDS', price_to_buy, vol))     
-        if self.sell_orchids:
-            vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
-            orders['ORCHIDS'].append(Order('ORCHIDS', price_to_sell , -vol))
-        if self.close_orchids:
-            vol = -self.position['ORCHIDS']
-            if vol < 0:
-                orders['ORCHIDS'].append(Order('ORCHIDS', best_sell['ORCHIDS'], -vol))
-            else:
-                orders['ORCHIDS'].append(Order('ORCHIDS', best_buy['ORCHIDS'], vol))
+                orders['ORCHIDS'].append(Order('ORCHIDS', round(best_sell['ORCHIDS']), vol))     
+            if self.sell_orchids:
+                vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
+                orders['ORCHIDS'].append(Order('ORCHIDS', round(best_buy['ORCHIDS']), -vol))
                 
+        self.last_export = convobv['ORCHIDS'].exportTariff
+        self.last_import = convobv['ORCHIDS'].importTariff
         self.last_humidity = convobv['ORCHIDS'].humidity
-        self.last_sunlight = convobv['ORCHIDS'].sunlight
+        self.last_orchid = mid_price['ORCHIDS']
 
         return orders
         
@@ -336,8 +304,8 @@ class Trader:
                 if vol_sell[p] >= self.POSITION_LIMIT[p]/10:
                     break
 
-        res_buy = mid_price['GIFT_BASKET'] - mid_price['CHOCOLATE']*4 - mid_price['STRAWBERRIES']*2 - mid_price['ROSES'] - 375
-        res_sell = mid_price['GIFT_BASKET'] - mid_price['CHOCOLATE']*4 - mid_price['STRAWBERRIES']*2 - mid_price['ROSES'] - 375
+        res_buy = mid_price['GIFT_BASKET'] - mid_price['CHOCOLATE']*4 - mid_price['STRAWBERRIES']*6 - mid_price['ROSES'] - 388
+        res_sell = mid_price['GIFT_BASKET'] - mid_price['CHOCOLATE']*4 - mid_price['STRAWBERRIES']*6 - mid_price['ROSES'] - 388
 
         trade_at = self.basket_std*0.5
         close_at = self.basket_std*(-1000)
@@ -381,16 +349,16 @@ class Trader:
                 self.cont_buy_basket_unfill += 2
                 pb_pos += vol
 
-        if int(round(self.person_position['Olivia']['ROSES'])) > 0:
+        # if int(round(self.person_position['Olivia']['ROSES'])) > 0:
 
-            val_ord = self.POSITION_LIMIT['ROSES'] - uku_pos
-            if val_ord > 0:
-                orders['ROSES'].append(Order('ROSES', worst_sell['ROSES'], val_ord))
-        if int(round(self.person_position['Olivia']['ROSES'])) < 0:
+        #     val_ord = self.POSITION_LIMIT['ROSES'] - uku_pos
+        #     if val_ord > 0:
+        #         orders['ROSES'].append(Order('ROSES', worst_sell['ROSES'], val_ord))
+        # if int(round(self.person_position['Olivia']['ROSES'])) < 0:
 
-            val_ord = -(self.POSITION_LIMIT['ROSES'] + uku_neg)
-            if val_ord < 0:
-                orders['ROSES'].append(Order('ROSES', worst_buy['ROSES'], val_ord))
+        #     val_ord = -(self.POSITION_LIMIT['ROSES'] + uku_neg)
+        #     if val_ord < 0:
+        #         orders['ROSES'].append(Order('ROSES', worst_buy['ROSES'], val_ord))
                 
         return orders
 
@@ -409,12 +377,12 @@ class Trader:
         conversions = [0]
         prods = ['ORCHIDS']
         
-        if self.position['ORCHIDS'] <= 100 and self.position['ORCHIDS'] > 0:
-            conversions.append(0)#self.position['ORCHIDS'])
-        elif self.position['ORCHIDS'] >= -100 and self.position['ORCHIDS'] < 0:
-            conversions.append(0)#(self.position['ORCHIDS']+1))
-        elif timestamp == 998*100:
-            conversions.append(abs(self.position['ORCHIDS']))
+        # if self.position['ORCHIDS'] <= 100 and self.position['ORCHIDS'] > 0:
+        #     conversions.append(0)#self.position['ORCHIDS'])
+        # elif self.position['ORCHIDS'] >= -100 and self.position['ORCHIDS'] < 0:
+        #     conversions.append(0)#(self.position['ORCHIDS']+1))
+        # elif timestamp == 998*100:
+        #     conversions.append(min(self.position['ORCHIDS'],100))
         
         # if timestamp == 999*100:
         #     conversions.append(self.position['ORCHIDS'])
