@@ -30,6 +30,7 @@ class Trader:
     starfruit_dim = 4
     buy_orchids = False
     sell_orchids = False
+    clear_orchids = False
     orchidpnl = 0
     last_orchid = 0
     sunlight_value = 0
@@ -232,12 +233,18 @@ class Trader:
                 vol_sell[p] += -vol 
             
             
+        if self.last_sunlight != -1 and (osunlight - self.last_sunlight > 1):
+            self.buy_orchids = True
+        if self.last_sunlight != -1 and (osunlight - self.last_sunlight < -1) and (osunlight - self.last_sunlight > -2):
+            self.sell_orchids = True
+        if self.last_humidity != -1 and (ohumidity - self.last_humidity < -0.01):
+            self.sell_orchids = True
         if self.last_export != -1 and (oexport - self.last_export >= 1):
             self.buy_orchids = True
-        if self.last_export != 1 and (oexport - self.last_export <= -1):
+        if self.last_export != -1 and (oexport - self.last_export <= -1):
             self.sell_orchids = True
-        if self.last_export != -1 and (oexport - self.last_export == 0):
-            self.sell_orchids = True
+        
+                
             
         # export tariff only changes by increments of 1
         # import tariff only by 0.2
@@ -261,19 +268,36 @@ class Trader:
         #     else:
         #         orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_sell['ORCHIDS']), 0))
         # else:
+        if self.clear_orchids:
+            vol = abs(self.position['ORCHIDS'])
+            if self.position['ORCHIDS'] > 0:
+                orders['ORCHIDS'].append(Order('ORCHIDS', best_buy['ORCHIDS'], -vol))
+            if self.position['ORCHIDS'] < 0:
+                orders['ORCHIDS'].append(Order('ORCHIDS', best_sell['ORCHIDS'], vol))
         if self.buy_orchids:
-            vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
+            vol = 10#self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
             orders['ORCHIDS'].append(Order('ORCHIDS', round(best_sell['ORCHIDS']), vol))     
         if self.sell_orchids:
-            vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
+            vol = 10#self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
             orders['ORCHIDS'].append(Order('ORCHIDS', round(best_buy['ORCHIDS']), -vol))
                 
         self.last_export = convobv['ORCHIDS'].exportTariff
         self.last_import = convobv['ORCHIDS'].importTariff
         self.last_humidity = convobv['ORCHIDS'].humidity
+        self.last_sunlight = convobv['ORCHIDS'].sunlight
         self.last_orchid = mid_price['ORCHIDS']
 
         return orders
+    
+# compute if we want to make a conversion or not
+    def conversion_opp(self, convobv, timestamp):
+        conversions = [0]
+        prods = ['ORCHIDS']
+        if self.last_export != -1 and (self.last_export - convobv['ORCHIDS'].exportTariff == 0):
+             conversions.append(self.position['ORCHIDS'])#round(abs(self.position['ORCHIDS'])))
+       
+        self.last_export = convobv['ORCHIDS'].exportTariff     
+        return sum(conversions)
         
 
 # BASKET = BASKET, STRAWBERRIES = CHOCOLATE, CHOCOLATE = STRAWBERRIES, ROSES = UKELELE
@@ -363,35 +387,6 @@ class Trader:
         if product == "STARFRUIT":
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
     
-    
-        
- # compute if we want to make a conversion or not
-    def conversion_opp(self, convobv, timestamp):
-        conversions = [0]
-        prods = ['ORCHIDS']
-        if self.last_export != -1 and (self.last_export - convobv['ORCHIDS'].exportTariff <= -1):
-             conversions.append(self.position['ORCHIDS'])#round(abs(self.position['ORCHIDS'])))
-        
-        # if self.position['ORCHIDS'] <= 100 and self.position['ORCHIDS'] > 0:
-        #     conversions.append(0)#self.position['ORCHIDS'])
-        # elif self.position['ORCHIDS'] >= -100 and self.position['ORCHIDS'] < 0:
-        #     conversions.append(0)#(self.position['ORCHIDS']+1))
-        # elif timestamp == 998*100:
-        #     conversions.append(min(self.position['ORCHIDS'],100))
-        
-        # if timestamp == 999*100:
-        #     conversions.append(self.position['ORCHIDS'])
-        # else:
-        #     conversions.append(0)
-        # for product in prods:
-        #     value = self.position[product]
-                  
-        #     if value < self.POSITION_LIMIT[product]:
-        #         conversions.append(abs(value)/2)
-        #     else:
-        #         conversions.append(0)
-        self.last_export = convobv['ORCHIDS'].exportTariff     
-        return sum(conversions)
 
 
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
