@@ -1,3 +1,4 @@
+from operator import truediv
 from typing import Dict, List, Tuple
 from datamodel import OrderDepth, TradingState, Order, ConversionObservation, Observation
 import collections
@@ -231,12 +232,13 @@ class Trader:
                 vol_sell[p] += -vol 
             
             
-        if self.last_export != -1 and (oexport - self.last_export >= 1) and self.last_import != -1 and (oimport - self.last_import == -0.2):
+        if self.last_export != -1 and (oexport - self.last_export >= 1 or oexport - self.last_export <= -1):
             self.buy_orchids = True
-        if self.last_export != -1 and (oexport - self.last_export <= -1) and self.last_import != -1 and (oimport - self.last_import == 0.2):
+        if self.last_export != -1 and (oexport - self.last_export == 0):
             self.sell_orchids = True
             
         # export tariff only changes by increments of 1
+        # import tariff only by 0.2
            
        
         
@@ -246,23 +248,23 @@ class Trader:
         if self.sell_orchids and self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
             self.sell_orchids = False
             
-        if timestamp >= 995*100:
-            vol = self.position['ORCHIDS']
-            if self.position['ORCHIDS'] > 0:
-                # self.sell_orchids = True
-                orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_buy['ORCHIDS']), -vol))
-            elif self.position['ORCHIDS'] < 0:
-                # self.buy_orchids = True
-                orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_sell['ORCHIDS']), vol))
-            else:
-                orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_sell['ORCHIDS']), 0))
-        else:
-            if self.buy_orchids:
-                vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
-                orders['ORCHIDS'].append(Order('ORCHIDS', round(best_sell['ORCHIDS']), vol))     
-            if self.sell_orchids:
-                vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
-                orders['ORCHIDS'].append(Order('ORCHIDS', round(best_buy['ORCHIDS']), -vol))
+        # if timestamp >= 5000*100:
+        #     vol = self.position['ORCHIDS']
+        #     if self.position['ORCHIDS'] > 0:
+        #         # self.sell_orchids = True
+        #         orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_buy['ORCHIDS']), -vol))
+        #     elif self.position['ORCHIDS'] < 0:
+        #         # self.buy_orchids = True
+        #         orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_sell['ORCHIDS']), vol))
+        #     else:
+        #         orders['ORCHIDS'].append(Order('ORCHIDS', round(worst_sell['ORCHIDS']), 0))
+        # else:
+        if self.buy_orchids:
+            vol = self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
+            orders['ORCHIDS'].append(Order('ORCHIDS', round(best_sell['ORCHIDS']), vol))     
+        if self.sell_orchids:
+            vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
+            orders['ORCHIDS'].append(Order('ORCHIDS', round(best_buy['ORCHIDS']), -vol))
                 
         self.last_export = convobv['ORCHIDS'].exportTariff
         self.last_import = convobv['ORCHIDS'].importTariff
@@ -349,17 +351,6 @@ class Trader:
                 self.cont_buy_basket_unfill += 2
                 pb_pos += vol
 
-        # if int(round(self.person_position['Olivia']['ROSES'])) > 0:
-
-        #     val_ord = self.POSITION_LIMIT['ROSES'] - uku_pos
-        #     if val_ord > 0:
-        #         orders['ROSES'].append(Order('ROSES', worst_sell['ROSES'], val_ord))
-        # if int(round(self.person_position['Olivia']['ROSES'])) < 0:
-
-        #     val_ord = -(self.POSITION_LIMIT['ROSES'] + uku_neg)
-        #     if val_ord < 0:
-        #         orders['ROSES'].append(Order('ROSES', worst_buy['ROSES'], val_ord))
-                
         return orders
 
     
@@ -376,6 +367,8 @@ class Trader:
     def conversion_opp(self, convobv, timestamp):
         conversions = [0]
         prods = ['ORCHIDS']
+
+        conversions.append(abs(self.position['ORCHIDS'])/2)
         
         # if self.position['ORCHIDS'] <= 100 and self.position['ORCHIDS'] > 0:
         #     conversions.append(0)#self.position['ORCHIDS'])
