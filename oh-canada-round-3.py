@@ -207,14 +207,10 @@ class Trader:
         orders = {'ORCHIDS' : []}
         prods = ['ORCHIDS']
         osell, obuy, best_sell, best_buy, worst_sell, worst_buy, mid_price, vol_buy, vol_sell = {}, {}, {}, {}, {}, {}, {}, {}, {}
-        
-        osellvol, obuyvol = [], []
+       
         for p in prods:
             osell[p] = collections.OrderedDict(sorted(order_depth[p].sell_orders.items()))
             obuy[p] = collections.OrderedDict(sorted(order_depth[p].buy_orders.items(), reverse=True))
-            
-            osellvol[p] = list(order_depth[p].sell_orders.values())
-            obuyvol[p] = list(order_depth[p].buy_orders.values())
 
             osunlight = convobv[p].sunlight
             ohumidity = convobv[p].humidity
@@ -280,10 +276,10 @@ class Trader:
             if self.position['ORCHIDS'] < 0:
                 orders['ORCHIDS'].append(Order('ORCHIDS', best_sell['ORCHIDS'], vol))
         if self.buy_orchids:
-            vol = sum(osellvol['ORCHIDS'])#self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
+            vol = sum(vol_sell['ORCHIDS'])#self.POSITION_LIMIT['ORCHIDS'] - self.position['ORCHIDS']
             orders['ORCHIDS'].append(Order('ORCHIDS', round(best_sell['ORCHIDS']), vol))     
         if self.sell_orchids:
-            vol = sum(obuyvol['ORCHIDS'])#self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
+            vol = sum(vol_buy['ORCHIDS'])#self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
             orders['ORCHIDS'].append(Order('ORCHIDS', round(best_buy['ORCHIDS']), -vol))
                 
         self.last_export = convobv['ORCHIDS'].exportTariff
