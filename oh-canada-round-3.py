@@ -232,8 +232,10 @@ class Trader:
                 vol_sell[p] += -vol 
             
             
-        if self.last_export != -1 and (oexport - self.last_export >= 1 or oexport - self.last_export <= -1):
+        if self.last_export != -1 and (oexport - self.last_export >= 1):
             self.buy_orchids = True
+        if self.last_export != 1 and (oexport - self.last_export <= -1):
+            self.sell_orchids = True
         if self.last_export != -1 and (oexport - self.last_export == 0):
             self.sell_orchids = True
             
@@ -367,8 +369,8 @@ class Trader:
     def conversion_opp(self, convobv, timestamp):
         conversions = [0]
         prods = ['ORCHIDS']
-
-        conversions.append(abs(self.position['ORCHIDS'])/2)
+        if self.last_export != -1 and (self.last_export - convobv['ORCHIDS'].exportTariff <= -1):
+             conversions.append(self.position['ORCHIDS'])#round(abs(self.position['ORCHIDS'])))
         
         # if self.position['ORCHIDS'] <= 100 and self.position['ORCHIDS'] > 0:
         #     conversions.append(0)#self.position['ORCHIDS'])
@@ -388,6 +390,7 @@ class Trader:
         #         conversions.append(abs(value)/2)
         #     else:
         #         conversions.append(0)
+        self.last_export = convobv['ORCHIDS'].exportTariff     
         return sum(conversions)
 
 
