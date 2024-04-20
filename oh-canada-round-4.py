@@ -50,11 +50,15 @@ class Trader:
     cont_buy_basket_unfill = 0
     cont_sell_basket_unfill = 0
     
-    rate = 0.02
+    rate = 0.065
     years = 1
-    Tstep = 100
-    stdev_cc = 0.1
+    Tstep = 250
+    stdev_cc = 0.0240898021
     strike = 10000
+    buy_coconut = False
+    sell_coconut = False
+    buy_ccoupon = False
+    sell_ccoupon = False
 
 
     
@@ -289,12 +293,6 @@ class Trader:
         prods = ['ORCHIDS']
         
         return sum(conversions)
-        
-
-# BASKET = BASKET, STRAWBERRIES = CHOCOLATE, CHOCOLATE = STRAWBERRIES, ROSES = UKELELE
-
-# Add position limits of the products to the first line in the trader code, then add the connections to the run statement at the bottom. If confused, refer back to the stanford code
-
 
     def compute_orders_basket(self, order_depth):
 
@@ -371,18 +369,7 @@ class Trader:
         return orders
     
 
-# calculate price and orders for coconuts
-    dict = {'strike' : 100, 'price' : 100, 'time steps' : 100, 'sigma': 0.1, 'years': 1, 'risk-free rate': 0.02, 'dividend': 0.0, 
-            'callput': -1, 'AmerEu': -1}
-    # call = 1, put = -1; in callput
-    # American = 1, European = -1; in AmerEu
-
-    u = math.exp(dict['sigma']*math.sqrt(dict['years']/dict['time steps']))
-    d = 1/u
-    probup = (((math.exp((dict['risk-free rate']-dict['dividend'])*dict['years']/dict['time steps'])) - d) / (u - d))
-    discount_factor = dict['risk-free rate']/dict['time steps']
-    duration_of_time_step = (dict['years']/dict['time steps'])
-
+# calculate price and orders for coconuts and coconut coupons (call option)
     def coconuts_and_coupons(self, order_depth):
         orders = {'COCONUT' : [], 'COCONUT_COUPON': []}
         prods = ['COCONUT', 'COCONUT_COUPON']
@@ -408,9 +395,6 @@ class Trader:
                 vol_sell[p] += -vol 
                 if vol_sell[p] >= self.POSITION_LIMIT[p]/10:
                     break
-                
-        
-        # Coconut coupons are call options
         
         u = math.exp(self.stdev_cc*math.sqrt(self.years/self.Tstep))
         d = 1/u
@@ -428,7 +412,23 @@ class Trader:
                 
             payoffs.clear()
             payoffs.extend(discounting1)
-        coconut_coupon_price = discounting1[0]
+        calculated_ccoupon = discounting1[0]
+# *************************************End of calculations************************************
+        
+        # coconut logic
+        
+        if self.position['COCONUT'] == self.POSITION_LIMIT['COCONUT']:
+            self.buy_coconut = False
+        if self.position['COCONUT'] == -self.POSITION_LIMIT['COCONUT']:
+            self.sell_coconut = False
+            
+
+        # coconut coupon logic
+
+        if self.position['COCONUT_COUPON'] == self.POSITION_LIMIT['COCONUT_COUPON']:
+            self.buy_ccoupon = False
+        if self.position['COCONUT_COUPON'] == -self.POSITION_LIMIT['COCONUT_COUPON']:
+            self.sell_ccoupon = False
 
         return orders
 
@@ -445,7 +445,7 @@ class Trader:
  # RUN function, Only method required. It takes all buy and sell orders for all symbols as an input, and outputs a list of orders to be sent
     def run(self, state: TradingState) -> Dict[str, List[Order]]:
         # Initialize the method output dict as an empty dict
-        result = {'AMETHYSTS' : [], 'STARFRUIT' : [], 'ORCHIDS' : [],  'CHOCOLATE' : [], 'STRAWBERRIES': [], 'ROSES': [], 'GIFT_BASKET': []}
+        result = {'AMETHYSTS' : [], 'STARFRUIT' : [], 'ORCHIDS' : [],  'CHOCOLATE' : [], 'STRAWBERRIES': [], 'ROSES': [], 'GIFT_BASKET': [], 'COCONUT': [], 'COCONUT_COUPON': []}
 
         # Iterate over all the keys (the available products) contained in the order dephts
         for key, val in state.position.items():
@@ -497,14 +497,14 @@ class Trader:
           
         orders = self.compute_orders_orchids(state.order_depths, state.observations.conversionObservations, state.timestamp)
         result['ORCHIDS'] += orders['ORCHIDS']
-        
-        
-        # orders for the new products
         orders = self.compute_orders_basket(state.order_depths)
         result['CHOCOLATE'] += orders['CHOCOLATE']
         result['STRAWBERRIES'] += orders['STRAWBERRIES']
         result['ROSES'] += orders['ROSES']
         result['GIFT_BASKET'] += orders['GIFT_BASKET']
+        orders = self.coconuts_and_coupons(state.order_depths)
+        result['COCONUT'] += orders['COCONUT']
+        result['COCONUT_COUPON'] += orders['COCONUT_COUPON']
         
         
 
