@@ -280,8 +280,6 @@ class Trader:
             orders['ORCHIDS'].append(Order('ORCHIDS', (best_buy['ORCHIDS']), -vol))
                 
         self.last_export = convobv['ORCHIDS'].exportTariff
-        self.last_import = convobv['ORCHIDS'].importTariff
-        self.last_humidity = convobv['ORCHIDS'].humidity
         self.last_sunlight = convobv['ORCHIDS'].sunlight
         self.last_orchid = mid_price['ORCHIDS']
 
@@ -416,19 +414,43 @@ class Trader:
 # *************************************End of calculations************************************
         
         # coconut logic
+
+        if mid_price['COCONUT'] > 10000:
+            self.sell_coconut = True
+        else:
+            self.buy_coconut = True
         
         if self.position['COCONUT'] == self.POSITION_LIMIT['COCONUT']:
             self.buy_coconut = False
         if self.position['COCONUT'] == -self.POSITION_LIMIT['COCONUT']:
             self.sell_coconut = False
             
+        if self.buy_coconut:
+            vol = self.POSITION_LIMIT['COCONUT'] - self.position['COCONUT']
+            orders['COCONUT'].append(Order('COCONUT', best_sell['COCONUT'], vol))
+        if self.sell_coconut:
+            vol = self.POSITION_LIMIT['COCONUT'] + self.position['COCONUT']
+            orders['COCONUT'].append(Order('COCONUT', best_buy['COCONUT'], -vol))
+            
 
         # coconut coupon logic
+
+        if mid_price['COCONUT'] > calculated_ccoupon:
+            self.sell_ccoupon = True
+        else:
+            self.buy_ccoupon = True
 
         if self.position['COCONUT_COUPON'] == self.POSITION_LIMIT['COCONUT_COUPON']:
             self.buy_ccoupon = False
         if self.position['COCONUT_COUPON'] == -self.POSITION_LIMIT['COCONUT_COUPON']:
             self.sell_ccoupon = False
+            
+        if self.buy_ccoupon:
+            vol = self.POSITION_LIMIT['COCONUT_COUPON'] - self.position['COCONUT_COUPON']
+            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_sell['COCONUT_COUPON'], vol))
+        if self.sell_ccoupon:
+            vol = self.POSITION_LIMIT['COCONUT_COUPON'] + self.position['COCONUT_COUPON']
+            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_buy['COCONUT_COUPON'], -vol))
 
         return orders
 
