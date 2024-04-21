@@ -26,8 +26,9 @@ class Trader:
 
     cpnl = defaultdict(lambda : 0)
     starfruit_cache = []
-    coconuts_cache = []
-    starfruit_dim = 4
+    starfruit_dim = 4    
+    
+# orchids
     buy_orchids = False
     sell_orchids = False
     clear_orchids = False
@@ -43,23 +44,26 @@ class Trader:
     last_import = -1
     
 
-
+# gift baskets
     std = 25    
     basket_std = 50 # 191.1808805 standard deviation
 
     cont_buy_basket_unfill = 0
     cont_sell_basket_unfill = 0
     
+# coconuts and coconut coupons    
     rate = 0.065
     years = 1
     Tstep = 250
     stdev_cc = 0.0240898021
     strike = 10000
+    option_fv = 629.526
     buy_coconut = False
     sell_coconut = False
     buy_ccoupon = False
     sell_ccoupon = False
-
+    coconut_dim = 4
+    coconuts_cache = []
 
     
 # calculates the next price of starfrruit
@@ -269,8 +273,11 @@ class Trader:
         elif self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:#self.sell_orchids and self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
             self.sell_orchids = False
             
+        self.sell_orchids = False
+        self.buy_orchids = False
+            
         if self.clear_orchids:
-            vol = round(math.sqrt(self.position['ORCHIDS']))
+            vol = 10
             orders['ORCHIDS'].append(Order('ORCHIDS', worst_buy['ORCHIDS'], -vol))
         if self.buy_orchids:
             vol = self.POSITION_LIMIT['ORCHIDS']  - self.position['ORCHIDS']
@@ -286,12 +293,13 @@ class Trader:
         return orders
     
 # compute if we want to make a conversion or not
-    def conversion_opp(self, convobv, timestamp):
+    def conversion_opp(self):
         conversions = [1]
         prods = ['ORCHIDS']
         
         return sum(conversions)
-
+    
+# compute orders for basket
     def compute_orders_basket(self, order_depth):
 
         orders = {'CHOCOLATE' : [], 'STRAWBERRIES': [], 'ROSES' : [], 'GIFT_BASKET' : []}
@@ -366,9 +374,21 @@ class Trader:
 
         return orders
     
+def calc_next_price_coconut(self):
+        # bananas cache stores price from 1 day ago, current day resp
+        # by price, here we mean mid price
+
+        coef = [0.39244518,  0.24708895,  0.14171926,  0.21181824]
+        intercept = 34.95416609
+        nxt_price = intercept
+        for i, val in enumerate(self.starfruit_cache):
+            nxt_price += val * coef[i]
+
+        return int(round(nxt_price))
+    
 
 # calculate price and orders for coconuts and coconut coupons (call option)
-    def coconuts_and_coupons(self, order_depth):
+    def coconuts_and_coupons(self, product, order_depth, acc_bid, acc_ask, LIMIT):
         orders = {'COCONUT' : [], 'COCONUT_COUPON': []}
         prods = ['COCONUT', 'COCONUT_COUPON']
         osell, obuy, best_sell, best_buy, worst_sell, worst_buy, mid_price, vol_buy, vol_sell = {}, {}, {}, {}, {}, {}, {}, {}, {}
@@ -393,7 +413,42 @@ class Trader:
                 vol_sell[p] += -vol 
                 if vol_sell[p] >= self.POSITION_LIMIT[p]/10:
                     break
+                
+# Linear regression on coconut
+        cpos = self.position['COCONUT']
+        for ask, vol, in osell['COCONUT'].items():
+            if ((ask <= acc_bid) or ((cpos < 0) and (ask == acc_bid+1))) and cpos < self.POSITION_LIMIT['COCONUT']: # set up connections to run statement
+                order_for = min(-vol, self.POSITION_LIMIT['COCONUT'] - self.position['COCONUT'])
+                cpos += order_for
+                assert(order_for >= 0)
+                orders['COCONUT'].append(Order('COCONUT', ask, order_for))
+                
+        undercut_buy = best_buy['COCONUT'] + 1
+        undercut_sell = best_sell['COCONUT'] - 1 
         
+        bid_pr = min(undercut_buy, acc_bid)
+        sell_pr = max(undercut_sell, acc_ask)
+        
+        if cpos < self.POSITION_LIMIT['COCONUT']:
+            num = self.POSITION_LIMIT['COCONUT'] - cpos
+            orders['COCONUT'].append(Order(product, bid_pr, num))
+            cpos += num
+            
+        cpos = self.position['COCONUT']
+        
+        for bid, vol in obuy.items():
+            if ((bid >= acc_ask) or ((self.position['COCONUT']>0) and (bid+1 == acc_ask))) and cpos > -self.POSITION_LIMIT['COCONUT']:
+                order_for = max(-vol, -self.POSITION_LIMIT['COCONUT'] - cpos)
+                cpos += order_for
+                assert(order_for <= 0)
+                orders['COCONUT'].append(Order('COCONUT', bid, order_for))
+                
+        if cpos > -self.POSITION_LIMIT['COCONUT']:
+            num = -self.POSITION_LIMIT['COCONUT'] - cpos
+            orders['COCONUT'].append(Order('COCONUT', sell_pr, num))
+            cpos += num
+
+# calculating coconut coupon        
         u = math.exp(self.stdev_cc*math.sqrt(self.years/self.Tstep))
         d = 1/u
         probup = (((math.exp((self.rate)*self.years/self.Tstep)) - d) / (u - d))
@@ -410,15 +465,22 @@ class Trader:
                 
             payoffs.clear()
             payoffs.extend(discounting1)
+            
         calculated_ccoupon = discounting1[0]
-# *************************************End of calculations************************************
         
-        # coconut logic
+# ************************************* End of calculations ************************************
+        
 
-        if mid_price['COCONUT'] > 10000:
-            self.sell_coconut = True
+        if best_sell['COCONUT_COUPON'] < calculated_ccoupon:
+            self.buy_ccoupon = True
+            self.buy_coconut = False
+            if worst_buy['COCONUT'] > 10000:
+                self.sell_coconut = True
         else:
-            self.buy_coconut = True
+            self.sell_ccoupon = True
+            self.sell_coconut = False
+            if worst_sell['COCONUT'] < 10000:
+                self.buy_coconut = True
         
         if self.position['COCONUT'] == self.POSITION_LIMIT['COCONUT']:
             self.buy_coconut = False
@@ -433,13 +495,6 @@ class Trader:
             orders['COCONUT'].append(Order('COCONUT', best_buy['COCONUT'], -vol))
             
 
-        # coconut coupon logic
-
-        if mid_price['COCONUT'] > calculated_ccoupon:
-            self.sell_ccoupon = True
-        else:
-            self.buy_ccoupon = True
-
         if self.position['COCONUT_COUPON'] == self.POSITION_LIMIT['COCONUT_COUPON']:
             self.buy_ccoupon = False
         if self.position['COCONUT_COUPON'] == -self.POSITION_LIMIT['COCONUT_COUPON']:
@@ -449,7 +504,7 @@ class Trader:
             vol = self.POSITION_LIMIT['COCONUT_COUPON'] - self.position['COCONUT_COUPON']
             orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_sell['COCONUT_COUPON'], vol))
         if self.sell_ccoupon:
-            vol = self.POSITION_LIMIT['COCONUT_COUPON'] + self.position['COCONUT_COUPON']
+            vol = self.POSITION_LIMIT['COCONUT'] + self.position['COCONUT']
             orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_buy['COCONUT_COUPON'], -vol))
 
         return orders
@@ -570,7 +625,7 @@ class Trader:
 
 				# sample conversion request. check more details below. 
         
-        conversions = self.conversion_opp(state.observations.conversionObservations, state.timestamp)
+        conversions = self.conversion_opp()
         print(f"Total Conversions: {conversions}")
 
         return result, conversions, traderdata
