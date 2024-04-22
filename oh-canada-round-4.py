@@ -52,7 +52,10 @@ class Trader:
     cont_sell_basket_unfill = 0
     
 # coconuts and coconut coupons    
-    rate = 0.065868
+
+    # average coconut: 10040.633, 10067.36595, 9891.704
+    # average coconut coupon: 656.97875, 668.4934, 579.66715
+    rate = 0.0656
     years = 1
     Tstep = 250
     stdev_cc = 0.0240898021
@@ -436,7 +439,7 @@ class Trader:
         
 # ************************************* End of calculations ************************************
         
-        if self.option_fv < calculated_ccoupon: # fair value is $637.63
+        if best_sell['COCONUT_COUPON'] < calculated_ccoupon: # fair value is $637.63
             self.buy_ccoupon = True
         else:
             self.sell_ccoupon = True            
@@ -448,10 +451,10 @@ class Trader:
             
         if self.buy_ccoupon:
             vol = self.position['COCONUT'] + 2*self.position['COCONUT_COUPON']
-            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_sell['COCONUT_COUPON'], vol))
+            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', round(calculated_ccoupon), vol))
         if self.sell_ccoupon:
-            vol = 2*self.position['COCONUT_COUPON'] + self.position['COCONUT']
-            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_buy['COCONUT_COUPON'], -vol))
+            vol = 2*self.position['COCONUT_COUPON'] - self.position['COCONUT']
+            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', round(calculated_ccoupon), -vol))
 
         return orders
 
