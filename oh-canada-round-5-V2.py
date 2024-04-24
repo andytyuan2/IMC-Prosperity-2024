@@ -451,10 +451,10 @@ class Trader:
             
         if self.buy_ccoupon:
             vol = self.position['COCONUT']
-            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', round(calculated_ccoupon), vol))
+            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_sell['COCONUT_COUPON'], vol))
         if self.sell_ccoupon:
             vol = self.position['COCONUT']
-            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', round(calculated_ccoupon), -vol))
+            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_buy['COCONUT_COUPON'], -vol))
             
         # # EXAMPLE OF POSITION TAKING WITH COUNTERPARTIES           
         # if int(round(self.person_position['Olivia']['UKULELE'])) > 0:
