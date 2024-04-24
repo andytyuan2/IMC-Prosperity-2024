@@ -50,6 +50,12 @@ class Trader:
 
     cont_buy_basket_unfill = 0
     cont_sell_basket_unfill = 0
+    roses_cache = []
+    chocolate_cache = []
+    strawberries_cache = []
+    roses_dim = 4
+    chocolate_dim = 4
+    strawberries_dim = 4
     
 # coconuts and coconut coupons    
 
@@ -303,6 +309,39 @@ class Trader:
         
         return sum(conversions)
     
+# compute roses
+    def calc_next_price_roses(self):
+
+        coef = [-0.0400534590195346,  -0.00845943440459434, -0.00792319375323194, 0.00668682775273693]
+        intercept = 48.17
+        nxt_price = intercept
+        for i, val in enumerate(self.roses_cache):
+            nxt_price += val * coef[i]
+
+        return int(round(nxt_price))
+    
+# compute chocolate
+    def calc_next_price_chocolate(self):
+
+        coef = [-0.000178865602788656,  -0.0117317876373179, -0.0124092641200926, 0.0159415034344165]
+        intercept = 38.99
+        nxt_price = intercept
+        for i, val in enumerate(self.chocolate_cache):
+            nxt_price += val * coef[i]
+
+        return int(round(nxt_price))
+    
+# compute strawberries
+    def calc_next_price_strawberries(self):
+
+        coef = [0.004495700093957, 0.00346136471861365, -0.00699700421197004, 0.0121283581773643]
+        intercept = 27.20
+        nxt_price = intercept
+        for i, val in enumerate(self.strawberries_cache):
+            nxt_price += val * coef[i]
+
+        return int(round(nxt_price))
+    
 # compute orders for basket
     def compute_orders_basket(self, order_depth):
 
@@ -471,11 +510,15 @@ class Trader:
     def compute_orders(self, product, order_depth, acc_bid, acc_ask):
         if product == "AMETHYSTS":
             return self.compute_orders_amethysts(product, order_depth, acc_bid, acc_ask)
-        if product == 'STRAWBERRIES':
-            return self.compute_orders_amethysts(product, order_depth, acc_bid, acc_ask)
         if product == "STARFRUIT":
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
         if product == "COCONUT":
+            return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
+        if product == "STRAWBERRIES":
+            return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
+        if product == "ROSES":
+            return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
+        if product == "CHOCOLATE":
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
     
 
@@ -514,9 +557,6 @@ class Trader:
         amethysts_lb = 10000
         amethysts_ub = 10000
         
-        strawberry_lb = 3960
-        strawberry_ub = 3960
-        
         # for coconuts
         if len(self.coconuts_cache) == self.coconut_dim:
             self.coconuts_cache.pop(0)
@@ -532,11 +572,59 @@ class Trader:
         if len(self.coconuts_cache) == self.coconut_dim:
             coconut_lb = self.calc_next_price_coconut() - 1
             coconut_ub = self.calc_next_price_coconut() + 1
+            
+        # for roses
+        if len(self.roses_cache) == self.roses_dim:
+            self.roses_cache.pop(0)
+            
+        _, bs_roses = self.values_extract(collections.OrderedDict(sorted(state.order_depths['ROSES'].sell_orders.items())))
+        _, bb_roses = self.values_extract(collections.OrderedDict(sorted(state.order_depths['ROSES'].buy_orders.items(), reverse=True)), 1)
+        
+        self.roses_cache.append((bs_roses+bb_roses)/2)
+        
+        roses_lb = -INF
+        roses_ub = INF
+        
+        if len(self.roses_cache) == self.roses_dim:
+            ross_lb = self.calc_next_price_roses() - 1
+            roses_ub = self.calc_next_price_roses() + 1
+            
+        # for chocolate
+        if len(self.chocolate_cache) == self.chocolate_dim:
+            self.chocolate_cache.pop(0)
+            
+        _, bs_chocolate = self.values_extract(collections.OrderedDict(sorted(state.order_depths['CHOCOLATE'].sell_orders.items())))
+        _, bb_chocolate = self.values_extract(collections.OrderedDict(sorted(state.order_depths['CHOCOLATE'].buy_orders.items(), reverse=True)), 1)
+        
+        self.chocolate_cache.append((bs_chocolate+bb_chocolate)/2)
+        
+        chocolate_lb = -INF
+        chocolate_ub = INF
+        
+        if len(self.chocolate_cache) == self.chocolate_dim:
+            chocolate_lb = self.calc_next_price_chocolate() - 1
+            chocolate_ub = self.calc_next_price_chocolate() + 1
+            
+        # for strawberries
+        if len(self.strawberries_cache) == self.strawberries_dim:
+            self.strawberries_cache.pop(0)
+            
+        _, bs_strawberries = self.values_extract(collections.OrderedDict(sorted(state.order_depths['STRAWBERRIES'].sell_orders.items())))
+        _, bb_strawberries = self.values_extract(collections.OrderedDict(sorted(state.order_depths['STRAWBERRIES'].buy_orders.items(), reverse=True)), 1)
+        
+        self.strawberries_cache.append((bs_strawberries+bb_strawberries)/2)
+        
+        strawberries_lb = -INF
+        strawberries_ub = INF
+        
+        if len(self.strawberries_cache) == self.strawberries_dim:
+            strawberries_lb = self.calc_next_price_strawberries() - 1
+            strawberries_ub = self.calc_next_price_strawberries() + 1
 
         # CHANGE FROM HERE
 
-        acc_bid = {'AMETHYSTS' : amethysts_lb, 'STARFRUIT' : starfruit_lb, 'COCONUT': coconut_lb, 'STRAWBERRIES': strawberry_lb} # we want to buy at slightly below
-        acc_ask = {'AMETHYSTS' : amethysts_ub, 'STARFRUIT' : starfruit_ub, 'COCONUT': coconut_ub, 'STRAWBERRIES': strawberry_ub} # we want to sell at slightly above
+        acc_bid = {'AMETHYSTS' : amethysts_lb, 'STARFRUIT' : starfruit_lb, 'COCONUT': coconut_lb, 'STRAWBERRIES': strawberries_lb, 'ROSES': roses_lb, 'CHOCOLATE': chocolate_lb} # we want to buy at slightly below
+        acc_ask = {'AMETHYSTS' : amethysts_ub, 'STARFRUIT' : starfruit_ub, 'COCONUT': coconut_ub, 'STRAWBERRIES': strawberries_ub, 'ROSES': roses_ub, 'CHOCOLATE': chocolate_ub} # we want to sell at slightly above
 
         self.steps += 1
 
@@ -555,15 +643,12 @@ class Trader:
         orders = self.compute_orders_orchids(state.order_depths, state.observations.conversionObservations, state.timestamp)
         result['ORCHIDS'] += orders['ORCHIDS']
         orders = self.compute_orders_basket(state.order_depths)
-        result['CHOCOLATE'] += orders['CHOCOLATE']
-        result['STRAWBERRIES'] += orders['STRAWBERRIES']
-        result['ROSES'] += orders['ROSES']
         result['GIFT_BASKET'] += orders['GIFT_BASKET']
         orders = self.compute_orders_coupons(state.order_depths)
         result['COCONUT_COUPON'] += orders['COCONUT_COUPON']
         
         
-        for product in ['AMETHYSTS', 'STARFRUIT', 'COCONUT', 'STRAWBERRIES']:
+        for product in ['AMETHYSTS', 'STARFRUIT', 'COCONUT', 'STRAWBERRIES', 'ROSES', 'CHOCOLATE']:
             order_depth: OrderDepth = state.order_depths[product]
             orders = self.compute_orders(product, order_depth, acc_bid[product], acc_ask[product])
             result[product] += orders
