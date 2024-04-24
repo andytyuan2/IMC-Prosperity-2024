@@ -271,27 +271,27 @@ class Trader:
             self.clear_orchids = True
            
         # stop gap so we don't exceed position limit    
-        # if self.position['ORCHIDS'] == self.POSITION_LIMIT['ORCHIDS']:
-        #     self.buy_orchids = False
-        # elif self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
-        #     self.sell_orchids = False
+        if self.position['ORCHIDS'] == self.POSITION_LIMIT['ORCHIDS']:
+            self.buy_orchids = False
+        elif self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
+            self.sell_orchids = False
             
-        # self.sell_orchids = False
-        # self.buy_orchids = False
+        self.sell_orchids = False
+        self.buy_orchids = False
             
-        # if self.clear_orchids:
-        #     vol = 10
-        #     orders['ORCHIDS'].append(Order('ORCHIDS', worst_buy['ORCHIDS'], -vol))
-        # if self.buy_orchids:
-        #     vol = self.POSITION_LIMIT['ORCHIDS']  - self.position['ORCHIDS']
-        #     orders['ORCHIDS'].append(Order('ORCHIDS', (best_sell['ORCHIDS']), vol))     
-        # if self.sell_orchids:
-        #     vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
-        #     orders['ORCHIDS'].append(Order('ORCHIDS', (best_buy['ORCHIDS']), -vol))
+        if self.clear_orchids:
+            vol = 10
+            orders['ORCHIDS'].append(Order('ORCHIDS', worst_buy['ORCHIDS'], -vol))
+        if self.buy_orchids:
+            vol = self.POSITION_LIMIT['ORCHIDS']  - self.position['ORCHIDS']
+            orders['ORCHIDS'].append(Order('ORCHIDS', (best_sell['ORCHIDS']), vol))     
+        if self.sell_orchids:
+            vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
+            orders['ORCHIDS'].append(Order('ORCHIDS', (best_buy['ORCHIDS']), -vol))
                 
-        # self.last_export = convobv['ORCHIDS'].exportTariff
-        # self.last_sunlight = convobv['ORCHIDS'].sunlight
-        # self.last_orchid = mid_price['ORCHIDS']
+        self.last_export = convobv['ORCHIDS'].exportTariff
+        self.last_sunlight = convobv['ORCHIDS'].sunlight
+        self.last_orchid = mid_price['ORCHIDS']
 
         return orders
     
@@ -339,9 +339,8 @@ class Trader:
         pb_pos = self.position['GIFT_BASKET']
         pb_neg = self.position['GIFT_BASKET']
 
-        uku_pos = self.position['ROSES']
-        uku_neg = self.position['ROSES']
-
+        rose_pos = self.position['ROSES']
+        rose_neg = self.position['ROSES']
 
         basket_buy_sig = 0
         basket_sell_sig = 0
@@ -374,6 +373,17 @@ class Trader:
                 orders['GIFT_BASKET'].append(Order('GIFT_BASKET', worst_sell['GIFT_BASKET'], vol))
                 self.cont_buy_basket_unfill += 2
                 pb_pos += vol
+                
+        if int(round(self.person_position['Olivia']['ROSES'])) > 0:
+
+            val_ord = self.POSITION_LIMIT['ROSES'] - rose_pos
+            if val_ord > 0:
+                orders['ROSES'].append(Order('ROSES', worst_sell['ROSES'], val_ord))
+        if int(round(self.person_position['Olivia']['ROSES'])) < 0:
+
+            val_ord = -(self.POSITION_LIMIT['ROSES'] + rose_neg)
+            if val_ord < 0:
+                orders['ROSES'].append(Order('ROSES', worst_buy['ROSES'], val_ord))
 
         return orders
     
@@ -488,6 +498,8 @@ class Trader:
         print()
         for key, val in self.position.items():
             print(f'{key} position: {val}')
+            
+        # assert abs(self.position.get('ROSES', 0)) <= self.POSITION_LIMIT['ROSES']
 
         timestamp = state.timestamp
 
