@@ -5,7 +5,7 @@ from datamodel import (
     TradingState,
     Order,
     ConversionObservation,
-    Observation,
+    Observation
 )
 import collections
 from collections import defaultdict
@@ -14,27 +14,10 @@ import math
 import copy
 import numpy as np
 
-empty_dict = {
-    "AMETHYSTS": 0,
-    "STARFRUIT": 0,
-    "ORCHIDS": 0,
-    "CHOCOLATE": 0,
-    "STRAWBERRIES": 0,
-    "ROSES": 0,
-    "GIFT_BASKET": 0,
-    "COCONUT": 0,
-    "COCONUT_COUPON": 0,
+empty_dict = {"AMETHYSTS": 0, "STARFRUIT": 0, "ORCHIDS": 0, "CHOCOLATE": 0, "STRAWBERRIES": 0, "ROSES": 0, "GIFT_BASKET": 0, "COCONUT": 0, "COCONUT_COUPON": 0
 }
 
-PRICE_TERM = {
-    "AMETHYSTS": 0,
-    "STARFRUIT": 0,
-    "ORCHIDS": 2,
-    "GIFT_BASKET": 30,
-    "ROSES": 30,
-    "COCONUT": 30,
-    "COCONUT_COUPON": 30,
-}
+PRICE_TERM = {"AMETHYSTS": 0, "STARFRUIT": 0, "ORCHIDS": 2, "GIFT_BASKET": 30, "ROSES": 30, "COCONUT": 30, "COCONUT_COUPON": 30}
 
 
 def def_value():
@@ -45,15 +28,7 @@ INF = int(1e9)
 
 
 class Trader:
-    THRESHOLDS = {
-    "AMETHYSTS": {"over": 0, "mid": 10},
-    "STARFRUIT": {"over": 0, "mid": 10},
-    "ORCHIDS": {"over": 20, "mid": 40},
-    "GIFT_BASKET": {"over": 0, "mid": 10},
-    "ROSES": {"over": 0, "mid": 10},
-    "COCONUT": {"over": 0, "mid": 10},
-    "COCONUT_COUPON": {"over": 0, "mid": 10},
-    }
+    THRESHOLDS = {"AMETHYSTS": {"over": 0, "mid": 10}, "STARFRUIT": {"over": 0, "mid": 10}, "ORCHIDS": {"over": 20, "mid": 40}, "GIFT_BASKET": {"over": 0, "mid": 10}, "ROSES": {"over": 0, "mid": 10}, "COCONUT": {"over": 0, "mid": 10}, "COCONUT_COUPON": {"over": 0, "mid": 10}}
     
     market_taking: list[tuple[str, int, bool]] = []
 
@@ -559,11 +534,6 @@ class Trader:
             trading_orders.append(Order(product_id, target_price, -volume_needed))
             current_position -= volume_needed
             
-            
-            
-            
-            
-            
 
     # compute if we want to make a conversion or not
     def conversion_opp(self):
@@ -577,25 +547,11 @@ class Trader:
 
         orders = {"CHOCOLATE": [], "STRAWBERRIES": [], "ROSES": [], "GIFT_BASKET": []}
         prods = ["CHOCOLATE", "STRAWBERRIES", "ROSES", "GIFT_BASKET"]
-        (
-            osell,
-            obuy,
-            best_sell,
-            best_buy,
-            worst_sell,
-            worst_buy,
-            mid_price,
-            vol_buy,
-            vol_sell,
-        ) = ({}, {}, {}, {}, {}, {}, {}, {}, {})
+        (osell, obuy, best_sell, best_buy, worst_sell, worst_buy, mid_price, vol_buy, vol_sell) = ({}, {}, {}, {}, {}, {}, {}, {}, {})
 
         for p in prods:
-            osell[p] = collections.OrderedDict(
-                sorted(order_depth[p].sell_orders.items())
-            )
-            obuy[p] = collections.OrderedDict(
-                sorted(order_depth[p].buy_orders.items(), reverse=True)
-            )
+            osell[p] = collections.OrderedDict(sorted(order_depth[p].sell_orders.items()))
+            obuy[p] = collections.OrderedDict(sorted(order_depth[p].buy_orders.items(), reverse=True))
 
             best_sell[p] = next(iter(osell[p]))
             best_buy[p] = next(iter(obuy[p]))
@@ -614,20 +570,8 @@ class Trader:
                 if vol_sell[p] >= self.POSITION_LIMIT[p] / 10:
                     break
 
-        res_buy = (
-            mid_price["GIFT_BASKET"]
-            - mid_price["CHOCOLATE"] * 4
-            - mid_price["STRAWBERRIES"] * 6
-            - mid_price["ROSES"]
-            - 388
-        )
-        res_sell = (
-            mid_price["GIFT_BASKET"]
-            - mid_price["CHOCOLATE"] * 4
-            - mid_price["STRAWBERRIES"] * 6
-            - mid_price["ROSES"]
-            - 388
-        )
+        res_buy = (mid_price["GIFT_BASKET"] - mid_price["CHOCOLATE"] * 4 - mid_price["STRAWBERRIES"] * 6 - mid_price["ROSES"] - 388)
+        res_sell = (mid_price["GIFT_BASKET"] - mid_price["CHOCOLATE"] * 4 - mid_price["STRAWBERRIES"] * 6 - mid_price["ROSES"] - 388)
 
         trade_at = self.basket_std * 0.5
         close_at = self.basket_std * (-1000)
@@ -674,16 +618,17 @@ class Trader:
                 self.cont_buy_basket_unfill += 2
                 pb_pos += vol
 
-        if int(round(self.person_position["Olivia"]["ROSES"])) > 0:
+        if int(round(self.person_position['Rhianna']['ROSES'])) > 0:
 
-            val_ord = self.POSITION_LIMIT["ROSES"] - rose_pos
+            val_ord = self.POSITION_LIMIT['ROSES'] - rose_pos
             if val_ord > 0:
-                orders["ROSES"].append(Order("ROSES", worst_sell["ROSES"], val_ord))
-        if int(round(self.person_position["Olivia"]["ROSES"])) < 0:
+                orders['ROSES'].append(Order('ROSES', worst_sell['ROSES'], val_ord))
+        if int(round(self.person_position['Rhianna']['ROSES'])) < 0:
 
-            val_ord = -(self.POSITION_LIMIT["ROSES"] + rose_neg)
+            val_ord = -(self.POSITION_LIMIT['ROSES'] + rose_neg)
             if val_ord < 0:
-                orders["ROSES"].append(Order("ROSES", worst_buy["ROSES"], val_ord))
+                orders['ROSES'].append(Order('ROSES', worst_buy['ROSES'], val_ord))
+
 
         return orders
 
@@ -704,17 +649,7 @@ class Trader:
     def compute_orders_coupons(self, order_depth):
         orders = {"COCONUT": [], "COCONUT_COUPON": []}
         prods = ["COCONUT", "COCONUT_COUPON"]
-        (
-            osell,
-            obuy,
-            best_sell,
-            best_buy,
-            worst_sell,
-            worst_buy,
-            mid_price,
-            vol_buy,
-            vol_sell,
-        ) = ({}, {}, {}, {}, {}, {}, {}, {}, {})
+        (osell, obuy, best_sell, best_buy, worst_sell, worst_buy, mid_price, vol_buy, vol_sell) = ({}, {}, {}, {}, {}, {}, {}, {}, {})
 
         for p in prods:
             osell[p] = collections.OrderedDict(
@@ -750,22 +685,12 @@ class Trader:
         payoffs = []
         for n in range(self.Tstep + 1):
             payoffs.append(
-                max(
-                    0,
-                    (
-                        mid_price["COCONUT"] * (u ** ((self.Tstep) - n)) * (d**n)
-                        - self.strike
-                    ),
-                )
-            )
+                max(0,(mid_price["COCONUT"] * (u ** ((self.Tstep) - n)) * (d**n) - self.strike)))
 
         for x in reversed(range(1, self.Tstep + 1)):
             discounting1 = []
             for i in range(0, x):
-                discounting1.append(
-                    (((probup) * payoffs[i]) + ((1 - probup) * payoffs[i + 1]))
-                    / (math.exp(discount_factor))
-                )
+                discounting1.append((((probup) * payoffs[i]) + ((1 - probup) * payoffs[i + 1])) / (math.exp(discount_factor)))
 
             payoffs.clear()
             payoffs.extend(discounting1)
@@ -774,9 +699,9 @@ class Trader:
 
         # ************************************* End of calculations ************************************
 
-        if best_sell["COCONUT_COUPON"] < calculated_ccoupon:  # fair value is $637.63
+        if worst_sell["COCONUT_COUPON"] < calculated_ccoupon:  # fair value is $637.63
             self.buy_ccoupon = True
-        else:
+        if worst_buy['COCONUT_COUPON'] > calculated_ccoupon:
             self.sell_ccoupon = True
 
         if self.position["COCONUT_COUPON"] == self.POSITION_LIMIT["COCONUT_COUPON"]:
@@ -786,21 +711,10 @@ class Trader:
 
         if self.buy_ccoupon:
             vol = self.position["COCONUT"]
-            orders["COCONUT_COUPON"].append(
-                Order("COCONUT_COUPON", best_sell["COCONUT_COUPON"], vol)
-            )
+            orders["COCONUT_COUPON"].append(Order("COCONUT_COUPON", worst_sell["COCONUT_COUPON"], vol))
         if self.sell_ccoupon:
             vol = self.position["COCONUT"]
-            orders["COCONUT_COUPON"].append(
-                Order("COCONUT_COUPON", best_buy["COCONUT_COUPON"], -vol)
-            )
-
-        # # EXAMPLE OF POSITION TAKING WITH COUNTERPARTIES
-        # if int(round(self.person_position['Olivia']['UKULELE'])) > 0:
-
-        #     val_ord = self.POSITION_LIMIT['UKULELE']
-        #     if val_ord > 0:
-        #         orders['UKULELE'].append(Order('UKULELE', worst_sell['UKULELE'], val_ord))
+            orders["COCONUT_COUPON"].append(Order("COCONUT_COUPON", best_buy["COCONUT_COUPON"], -vol))
 
         return orders
 
@@ -809,18 +723,10 @@ class Trader:
         if product == "AMETHYSTS":
             return self.compute_orders_amethysts(product, order_depth, acc_bid, acc_ask)
         if product == "STARFRUIT":
-            return self.compute_orders_regression(
-                product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product]
-            )
+            return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
         if product == "COCONUT":
-            return self.compute_orders_regression(
-                product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product]
-            )
+            return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
             
-    
-    
-      
-    
     
     def get_acceptable_price(self, state: TradingState, product: str):
         """
