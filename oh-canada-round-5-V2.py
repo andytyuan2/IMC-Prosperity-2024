@@ -374,12 +374,12 @@ class Trader:
                 self.cont_buy_basket_unfill += 2
                 pb_pos += vol
                 
-        if int(round(self.person_position['Olivia']['ROSES'])) > 0:
+        if int(round(self.person_position['Rhianna']['ROSES'])) > 0:
 
             val_ord = self.POSITION_LIMIT['ROSES'] - rose_pos
             if val_ord > 0:
                 orders['ROSES'].append(Order('ROSES', worst_sell['ROSES'], val_ord))
-        if int(round(self.person_position['Olivia']['ROSES'])) < 0:
+        if int(round(self.person_position['Rhianna']['ROSES'])) < 0:
 
             val_ord = -(self.POSITION_LIMIT['ROSES'] + rose_neg)
             if val_ord < 0:
@@ -466,13 +466,6 @@ class Trader:
             vol = self.position['COCONUT']
             orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', best_buy['COCONUT_COUPON'], -vol))
             
-        # # EXAMPLE OF POSITION TAKING WITH COUNTERPARTIES           
-        # if int(round(self.person_position['Olivia']['UKULELE'])) > 0:
-
-        #     val_ord = self.POSITION_LIMIT['UKULELE']
-        #     if val_ord > 0:
-        #         orders['UKULELE'].append(Order('UKULELE', worst_sell['UKULELE'], val_ord))
-
         return orders
 
     
