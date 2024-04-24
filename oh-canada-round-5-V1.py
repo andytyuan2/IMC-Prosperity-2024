@@ -50,6 +50,12 @@ class Trader:
 
     cont_buy_basket_unfill = 0
     cont_sell_basket_unfill = 0
+    roses_cache = []
+    chocolate_cache = []
+    strawberries_cache = []
+    roses_dim = 2
+    chocolate_dim = 2
+    strawberries_dim = 2
     
 # coconuts and coconut coupons    
 
@@ -113,9 +119,9 @@ class Trader:
         mx_with_buy = -1
 
         for ask, vol in osell.items():
-            if ((ask < acc_bid) or ((self.position[product]<0) and (ask == acc_bid))) and cpos < self.POSITION_LIMIT['AMETHYSTS']:
+            if ((ask < acc_bid) or ((self.position[product]<0) and (ask == acc_bid))) and cpos < self.POSITION_LIMIT[product]:
                 mx_with_buy = max(mx_with_buy, ask)
-                order_for = min(-vol, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
+                order_for = min(-vol, self.POSITION_LIMIT[product] - cpos)
                 cpos += order_for
                 assert(order_for >= 0)
                 orders.append(Order(product, ask, order_for))
@@ -129,49 +135,49 @@ class Trader:
         bid_pr = min(undercut_buy, acc_bid-1) # we will shift this by 1 to beat this price
         sell_pr = max(undercut_sell, acc_ask+1)
 
-        if (cpos < self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] < 0):
-            num = min(20, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
+        if (cpos < self.POSITION_LIMIT[product]) and (self.position[product] < 0):
+            num = min(20, self.POSITION_LIMIT[product] - cpos)
             orders.append(Order(product, min(undercut_buy + 1, acc_bid-1), num))
             cpos += num
 
-        if (cpos < self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] > 20):
-            num = min(20, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
+        if (cpos < self.POSITION_LIMIT[product]) and (self.position[product] > 20):
+            num = min(20, self.POSITION_LIMIT[product] - cpos)
             orders.append(Order(product, min(undercut_buy - 1, acc_bid - 2), num))
             cpos += num
 
-        if cpos < self.POSITION_LIMIT['AMETHYSTS']:
-            num = min(20, self.POSITION_LIMIT['AMETHYSTS'] - cpos)
+        if cpos < self.POSITION_LIMIT[product]:
+            num = min(20, self.POSITION_LIMIT[product] - cpos)
             orders.append(Order(product, bid_pr, num))
             cpos += num
         
         cpos = self.position[product]
 
         for bid, vol in obuy.items():
-            if ((bid > acc_ask) or ((self.position[product]>0) and (bid == acc_ask))) and cpos > -self.POSITION_LIMIT['AMETHYSTS']:
-                order_for = max(-vol, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
+            if ((bid > acc_ask) or ((self.position[product]>0) and (bid == acc_ask))) and cpos > -self.POSITION_LIMIT[product]:
+                order_for = max(-vol, -self.POSITION_LIMIT[product]-cpos)
                 # order_for is a negative number denoting how much we will sell
                 cpos += order_for
                 assert(order_for <= 0)
                 orders.append(Order(product, bid, order_for))
 
-        if (cpos > -self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] > 0):
-            num = max(-20, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
+        if (cpos > -self.POSITION_LIMIT[product]) and (self.position[product] > 0):
+            num = max(-20, -self.POSITION_LIMIT[product]-cpos)
             orders.append(Order(product, max(undercut_sell-1, acc_ask+1), num))
             cpos += num
 
-        if (cpos > -self.POSITION_LIMIT['AMETHYSTS']) and (self.position[product] < -20):
-            num = max(-20, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
+        if (cpos > -self.POSITION_LIMIT[product]) and (self.position[product] < -20):
+            num = max(-20, -self.POSITION_LIMIT[product]-cpos)
             orders.append(Order(product, max(undercut_sell+1, acc_ask+1), num))
             cpos += num
 
-        if cpos > -self.POSITION_LIMIT['AMETHYSTS']:
-            num = max(-20, -self.POSITION_LIMIT['AMETHYSTS']-cpos)
+        if cpos > -self.POSITION_LIMIT[product]:
+            num = max(-20, -self.POSITION_LIMIT[product]-cpos)
             orders.append(Order(product, sell_pr, num))
             cpos += num
 
         return orders
     
-# perform regression on starfruit
+# perform regression on starfruit, coconut
     def compute_orders_regression(self, product, order_depth, acc_bid, acc_ask, LIMIT):
         orders: list[Order] = []
 
@@ -251,7 +257,7 @@ class Trader:
                 vol_sell[p] += -vol 
             
             
-        if self.last_sunlight != -1 and (osunlight - self.last_sunlight > 1) and (mid_price['ORCHIDS'] - self.last_orchid > 2.33):
+        if self.last_sunlight != -1 and (osunlight - self.last_sunlight > 1) and (mid_price['ORCHIDS'] - self.last_orchid < 2.33):
             self.buy_orchids = True
         if self.last_export != -1 and ((oexport - self.last_export >= 1.5) or (oexport - self.last_export<= -1.5)):
             self.buy_orchids = True
@@ -271,27 +277,28 @@ class Trader:
             self.clear_orchids = True
            
         # stop gap so we don't exceed position limit    
-        # if self.position['ORCHIDS'] == self.POSITION_LIMIT['ORCHIDS']:
-        #     self.buy_orchids = False
-        # elif self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
-        #     self.sell_orchids = False
+        if self.position['ORCHIDS'] == self.POSITION_LIMIT['ORCHIDS']:
+            self.buy_orchids = False
+        elif self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
+            self.sell_orchids = False
             
-        # self.sell_orchids = False
-        # self.buy_orchids = False
+        self.sell_orchids = False
+        self.buy_orchids = False
             
-        # if self.clear_orchids:
-        #     vol = 10
-        #     orders['ORCHIDS'].append(Order('ORCHIDS', worst_buy['ORCHIDS'], -vol))
-        # if self.buy_orchids:
-        #     vol = self.POSITION_LIMIT['ORCHIDS']  - self.position['ORCHIDS']
-        #     orders['ORCHIDS'].append(Order('ORCHIDS', (best_sell['ORCHIDS']), vol))     
-        # if self.sell_orchids:
-        #     vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
-        #     orders['ORCHIDS'].append(Order('ORCHIDS', (best_buy['ORCHIDS']), -vol))
+
+        if self.clear_orchids:
+            vol = 10
+            orders['ORCHIDS'].append(Order('ORCHIDS', worst_buy['ORCHIDS'], -vol))
+        if self.buy_orchids:
+            vol = self.POSITION_LIMIT['ORCHIDS']  - self.position['ORCHIDS']
+            orders['ORCHIDS'].append(Order('ORCHIDS', (best_sell['ORCHIDS']), vol))     
+        if self.sell_orchids:
+            vol = self.POSITION_LIMIT['ORCHIDS'] + self.position['ORCHIDS']
+            orders['ORCHIDS'].append(Order('ORCHIDS', (best_buy['ORCHIDS']), -vol))
                 
-        # self.last_export = convobv['ORCHIDS'].exportTariff
-        # self.last_sunlight = convobv['ORCHIDS'].sunlight
-        # self.last_orchid = mid_price['ORCHIDS']
+        self.last_export = convobv['ORCHIDS'].exportTariff
+        self.last_sunlight = convobv['ORCHIDS'].sunlight
+        self.last_orchid = mid_price['ORCHIDS']
 
         return orders
     
@@ -301,6 +308,39 @@ class Trader:
         prods = ['ORCHIDS']
         
         return sum(conversions)
+    
+# compute roses
+    def calc_next_price_roses(self):
+
+        coef = [-0.0400534590195346,  -0.00845943440459434]#, -0.00792319375323194, 0.00668682775273693]
+        intercept = 48.17
+        nxt_price = intercept
+        for i, val in enumerate(self.roses_cache):
+            nxt_price += val * coef[i]
+
+        return int(round(nxt_price))
+    
+# compute chocolate
+    def calc_next_price_chocolate(self):
+
+        coef = [-0.000178865602788656,  -0.0117317876373179]#, -0.0124092641200926, 0.0159415034344165]
+        intercept = 38.99
+        nxt_price = intercept
+        for i, val in enumerate(self.chocolate_cache):
+            nxt_price += val * coef[i]
+
+        return int(round(nxt_price))
+    
+# compute strawberries
+    def calc_next_price_strawberries(self):
+
+        coef = [0.004495700093957, 0.00346136471861365]#, -0.00699700421197004, 0.0121283581773643]
+        intercept = 27.20
+        nxt_price = intercept
+        for i, val in enumerate(self.strawberries_cache):
+            nxt_price += val * coef[i]
+
+        return int(round(nxt_price))
     
 # compute orders for basket
     def compute_orders_basket(self, order_depth):
@@ -438,8 +478,8 @@ class Trader:
         calculated_ccoupon = discounting1[0]
         
 # ************************************* End of calculations ************************************
-        
-        if best_sell['COCONUT_COUPON'] < calculated_ccoupon: # fair value is $637.63
+        if self.position['COCONUT'] < 0:
+        # if best_sell['COCONUT_COUPON'] < calculated_ccoupon: # fair value is $637.63
             self.buy_ccoupon = True
         else:
             self.sell_ccoupon = True            
@@ -451,17 +491,17 @@ class Trader:
             
         if self.buy_ccoupon:
             vol = self.position['COCONUT']
-            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', round(calculated_ccoupon), vol))
+            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', round((best_sell['COCONUT_COUPON'] + calculated_ccoupon)/2), vol))
         if self.sell_ccoupon:
             vol = self.position['COCONUT']
-            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', round(calculated_ccoupon), -vol))
+            orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', round((best_buy['COCONUT_COUPON'] + calculated_ccoupon)/2), -abs(vol)))
             
         # # EXAMPLE OF POSITION TAKING WITH COUNTERPARTIES           
-        # if int(round(self.person_position['Olivia']['UKULELE'])) > 0:
+        # if int(round(self.person_position['Olivia']['COCONUT_COUPON'])) > 0:
 
-        #     val_ord = self.POSITION_LIMIT['UKULELE']
+        #     val_ord = self.POSITION_LIMIT['COCONUT_COUPON'] - self.position['COCONUT_COUPON']
         #     if val_ord > 0:
-        #         orders['UKULELE'].append(Order('UKULELE', worst_sell['UKULELE'], val_ord))
+        #         orders['COCONUT_COUPON'].append(Order('COCONUT_COUPON', worst_sell['COCONUT_COUPON'], val_ord))
 
         return orders
 
@@ -473,6 +513,12 @@ class Trader:
         if product == "STARFRUIT":
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
         if product == "COCONUT":
+            return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
+        if product == "STRAWBERRIES":
+            return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
+        if product == "ROSES":
+            return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
+        if product == "CHOCOLATE":
             return self.compute_orders_regression(product, order_depth, acc_bid, acc_ask, self.POSITION_LIMIT[product])
     
 
@@ -526,11 +572,61 @@ class Trader:
         if len(self.coconuts_cache) == self.coconut_dim:
             coconut_lb = self.calc_next_price_coconut() - 1
             coconut_ub = self.calc_next_price_coconut() + 1
+            
+        # for roses
+        if len(self.roses_cache) == self.roses_dim:
+            self.roses_cache.pop(0)
+            
+        _, bs_roses = self.values_extract(collections.OrderedDict(sorted(state.order_depths['ROSES'].sell_orders.items())))
+        _, bb_roses = self.values_extract(collections.OrderedDict(sorted(state.order_depths['ROSES'].buy_orders.items(), reverse=True)), 1)
+        
+        self.roses_cache.append((bs_roses+bb_roses)/2)
+        
+        roses_lb = -INF
+        roses_ub = INF
+        
+        if len(self.roses_cache) == self.roses_dim:
+            ross_lb = self.calc_next_price_roses() - 1
+            roses_ub = self.calc_next_price_roses() + 1
+            
+        # for chocolate
+        if len(self.chocolate_cache) == self.chocolate_dim:
+            self.chocolate_cache.pop(0)
+            
+        _, bs_chocolate = self.values_extract(collections.OrderedDict(sorted(state.order_depths['CHOCOLATE'].sell_orders.items())))
+        _, bb_chocolate = self.values_extract(collections.OrderedDict(sorted(state.order_depths['CHOCOLATE'].buy_orders.items(), reverse=True)), 1)
+        
+        self.chocolate_cache.append((bs_chocolate+bb_chocolate)/2)
+        
+        chocolate_lb = -INF
+        chocolate_ub = INF
+        
+        if len(self.chocolate_cache) == self.chocolate_dim:
+            chocolate_lb = self.calc_next_price_chocolate() - 1
+            chocolate_ub = self.calc_next_price_chocolate() + 1
+            
+        print(self.chocolate_cache)
+            
+        # for strawberries
+        if len(self.strawberries_cache) == self.strawberries_dim:
+            self.strawberries_cache.pop(0)
+            
+        _, bs_strawberries = self.values_extract(collections.OrderedDict(sorted(state.order_depths['STRAWBERRIES'].sell_orders.items())))
+        _, bb_strawberries = self.values_extract(collections.OrderedDict(sorted(state.order_depths['STRAWBERRIES'].buy_orders.items(), reverse=True)), 1)
+        
+        self.strawberries_cache.append((bs_strawberries+bb_strawberries)/2)
+        
+        strawberries_lb = -INF
+        strawberries_ub = INF
+        
+        if len(self.strawberries_cache) == self.strawberries_dim:
+            strawberries_lb = self.calc_next_price_strawberries() - 1
+            strawberries_ub = self.calc_next_price_strawberries() + 1
 
         # CHANGE FROM HERE
 
-        acc_bid = {'AMETHYSTS' : amethysts_lb, 'STARFRUIT' : starfruit_lb, 'COCONUT': coconut_lb} # we want to buy at slightly below
-        acc_ask = {'AMETHYSTS' : amethysts_ub, 'STARFRUIT' : starfruit_ub, 'COCONUT': coconut_ub} # we want to sell at slightly above
+        acc_bid = {'AMETHYSTS' : amethysts_lb, 'STARFRUIT' : starfruit_lb, 'COCONUT': coconut_lb, 'STRAWBERRIES': strawberries_lb, 'ROSES': roses_lb, 'CHOCOLATE': chocolate_lb} # we want to buy at slightly below
+        acc_ask = {'AMETHYSTS' : amethysts_ub, 'STARFRUIT' : starfruit_ub, 'COCONUT': coconut_ub, 'STRAWBERRIES': strawberries_ub, 'ROSES': roses_ub, 'CHOCOLATE': chocolate_ub} # we want to sell at slightly above
 
         self.steps += 1
 
@@ -549,15 +645,12 @@ class Trader:
         orders = self.compute_orders_orchids(state.order_depths, state.observations.conversionObservations, state.timestamp)
         result['ORCHIDS'] += orders['ORCHIDS']
         orders = self.compute_orders_basket(state.order_depths)
-        result['CHOCOLATE'] += orders['CHOCOLATE']
-        result['STRAWBERRIES'] += orders['STRAWBERRIES']
-        result['ROSES'] += orders['ROSES']
         result['GIFT_BASKET'] += orders['GIFT_BASKET']
         orders = self.compute_orders_coupons(state.order_depths)
         result['COCONUT_COUPON'] += orders['COCONUT_COUPON']
         
         
-        for product in ['AMETHYSTS', 'STARFRUIT', 'COCONUT']:
+        for product in ['AMETHYSTS', 'STARFRUIT', 'COCONUT', 'STRAWBERRIES', 'ROSES', 'CHOCOLATE']:
             order_depth: OrderDepth = state.order_depths[product]
             orders = self.compute_orders(product, order_depth, acc_bid[product], acc_ask[product])
             result[product] += orders
@@ -603,4 +696,5 @@ class Trader:
         return result, conversions, traderdata
                
         
+
 
