@@ -70,7 +70,7 @@ class Trader:
 
     # gift baskets
     std = 25
-    basket_std = 50  # 191.1808805 standard deviation
+    basket_std = 200  # 191.1808805 standard deviation
 
     cont_buy_basket_unfill = 0
     cont_sell_basket_unfill = 0

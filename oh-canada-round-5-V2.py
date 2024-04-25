@@ -46,7 +46,7 @@ class Trader:
 
 # gift baskets
     std = 25    
-    basket_std = 50 # 191.1808805 standard deviation
+    basket_std = 200 # 191.1808805 standard deviation
 
     cont_buy_basket_unfill = 0
     cont_sell_basket_unfill = 0
@@ -251,11 +251,9 @@ class Trader:
                 vol_sell[p] += -vol 
             
             
-        if self.last_sunlight != -1 and (osunlight - self.last_sunlight > 1) and (mid_price['ORCHIDS'] - self.last_orchid > 2.33):
+        if self.last_sunlight != -1 and self.last_export != -1 and (mid_price['ORCHIDS'] - self.last_orchid > 2.33) and ((oexport - self.last_export >= 1.5) or (oexport - self.last_export<= -1.5)):
             self.buy_orchids = True
-        if self.last_export != -1 and ((oexport - self.last_export >= 1.5) or (oexport - self.last_export<= -1.5)):
-            self.buy_orchids = True
-        if self.last_export != -1 and (oexport - self.last_export == 1):
+        if self.last_sunlight != -1 and self.last_export != -1 and (mid_price['ORCHIDS'] - self.last_orchid < -2.33) and (oexport - self.last_export == 1):
             self.sell_orchids = True
             
         # export tariff only changes by increments of 1
@@ -275,9 +273,6 @@ class Trader:
             self.buy_orchids = False
         elif self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
             self.sell_orchids = False
-            
-        self.sell_orchids = False
-        self.buy_orchids = False
             
         if self.clear_orchids:
             vol = 10
