@@ -251,22 +251,12 @@ class Trader:
                 vol_sell[p] += -vol 
             
             
-        if self.last_sunlight != -1 and self.last_export != -1 and (mid_price['ORCHIDS'] - self.last_orchid > 2.33) and ((oexport - self.last_export >= 1.5) or (oexport - self.last_export<= -1.5)):
+        if self.last_export != -1 and self.last_orchid != 0 and (best_sell['ORCHIDS'] - self.last_orchid > 4) and ((oexport - self.last_export >= 1)):
             self.buy_orchids = True
-        if self.last_sunlight != -1 and self.last_export != -1 and (mid_price['ORCHIDS'] - self.last_orchid < -2.33) and (oexport - self.last_export == 1):
+        if self.last_export != -1 and self.last_orchid != 0 and (best_buy['ORCHIDS'] - self.last_orchid < -4) and (oexport - self.last_export <= -1):
             self.sell_orchids = True
             
         # export tariff only changes by increments of 1
-        # import tariff only by 0.2
-
-        if self.buy_orchids and self.sell_orchids:
-            self.buy_orchids = False
-            self.sell_orchids = False
-            
-        if self.position['ORCHIDS'] > 0 and self.sell_orchids == False:
-            self.buy_orchids = False
-            self.sell_orchids = False
-            self.clear_orchids = True
            
         # stop gap so we don't exceed position limit    
         if self.position['ORCHIDS'] == self.POSITION_LIMIT['ORCHIDS']:
@@ -274,9 +264,6 @@ class Trader:
         elif self.position['ORCHIDS'] == -self.POSITION_LIMIT['ORCHIDS']:
             self.sell_orchids = False
             
-        if self.clear_orchids:
-            vol = 10
-            orders['ORCHIDS'].append(Order('ORCHIDS', worst_buy['ORCHIDS'], -vol))
         if self.buy_orchids:
             vol = self.POSITION_LIMIT['ORCHIDS']  - self.position['ORCHIDS']
             orders['ORCHIDS'].append(Order('ORCHIDS', (best_sell['ORCHIDS']), vol))     
